@@ -1,73 +1,52 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const storeSettingsSchema = new mongoose.Schema({
+const StoreSettings = sequelize.define('StoreSettings', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   contact: {
-    phone: {
-      type: String,
-      default: ''
-    },
-    callPhone: {
-      type: String,
-      default: ''
-    },
-    email: {
-      type: String,
-      default: ''
-    },
-    address: {
-      type: String,
-      default: ''
-    },
-    whatsapp: {
-      type: String,
-      default: ''
+    type: DataTypes.JSON,
+    defaultValue: {
+      phone: '',
+      callPhone: '',
+      email: '',
+      address: '',
+      whatsapp: ''
     }
   },
   banner: {
-    images: [{
-      type: String,
-      default: null
-    }],
-    image: {
-      type: String,
-      default: null
-    },
-    title: {
-      type: String,
-      default: ''
-    },
-    description: {
-      type: String,
-      default: ''
+    type: DataTypes.JSON,
+    defaultValue: {
+      images: [],
+      image: null,
+      title: '',
+      description: ''
     }
   },
   specialOffer: {
-    enabled: {
-      type: Boolean,
-      default: false
-    },
-    percentage: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 100
-    },
-    title: {
-      type: String,
-      default: ''
+    type: DataTypes.JSON,
+    defaultValue: {
+      enabled: false,
+      percentage: 0,
+      title: ''
     }
   },
   deliveryFee: {
-    type: Number,
-    default: 0,
-    min: 0
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+    validate: {
+      min: 0
+    }
   }
 }, {
   timestamps: true
 });
 
-// Ensure only one settings document exists
-storeSettingsSchema.statics.getSettings = async function() {
+// Static method to get or create settings
+StoreSettings.getSettings = async function() {
   let settings = await this.findOne();
   if (!settings) {
     settings = await this.create({});
@@ -75,5 +54,4 @@ storeSettingsSchema.statics.getSettings = async function() {
   return settings;
 };
 
-export default mongoose.model('StoreSettings', storeSettingsSchema);
-
+export default StoreSettings;

@@ -1,40 +1,42 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const categorySchema = new mongoose.Schema({
+const Category = sequelize.define('Category', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   name: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     trim: true
   },
   slug: {
-    type: String,
-    required: true,
-    lowercase: true
+    type: DataTypes.STRING,
+    allowNull: false
   },
-  parent: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
-    default: null
+  parentId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Categories',
+      key: 'id'
+    }
   },
-  subcategories: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category'
-  }],
   image: {
-    type: String,
-    default: null
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: null
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ['slug', 'parentId']
+    }
+  ]
 });
 
-// Compound unique index: slug must be unique per parent
-// This allows same name/slug under different parents
-// Multiple null values are allowed in unique indexes, but we want only one main category per slug
-// So we need to ensure null is treated consistently
-categorySchema.index({ slug: 1, parent: 1 }, { 
-  unique: true
-});
-
-export default mongoose.model('Category', categorySchema);
-
+export default Category;

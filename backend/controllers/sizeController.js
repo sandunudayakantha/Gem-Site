@@ -1,14 +1,20 @@
+import { Op } from 'sequelize';
 import Size from '../models/Size.js';
+import Category from '../models/Category.js';
 
 // Get all sizes
 export const getSizes = async (req, res) => {
   try {
     const { category } = req.query;
-    const query = category ? { $or: [{ category: category }, { category: null }] } : {};
+    const where = category ? { 
+      [Op.or]: [{ categoryId: category }, { categoryId: null }] 
+    } : {};
     
-    const sizes = await Size.find(query)
-      .populate('category', 'name')
-      .sort({ order: 1, name: 1 });
+    const sizes = await Size.findAll({
+      where,
+      include: [{ model: Category, as: 'category', attributes: ['name'] }],
+      order: [['order', 'ASC'], ['name', 'ASC']]
+    });
     
     res.json(sizes);
   } catch (error) {
@@ -19,8 +25,9 @@ export const getSizes = async (req, res) => {
 // Get single size
 export const getSize = async (req, res) => {
   try {
-    const size = await Size.findById(req.params.id)
-      .populate('category', 'name');
+    const size = await Size.findByPk(req.params.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name'] }]
+    });
     
     if (!size) {
       return res.status(404).json({ message: 'Size not found' });
@@ -41,19 +48,20 @@ export const createSize = async (req, res) => {
       return res.status(400).json({ message: 'Name and display name are required' });
     }
 
-    const size = new Size({
+    const size = await Size.create({
       name: name.toUpperCase().trim(),
       displayName: displayName.trim(),
-      category: category || null,
+      categoryId: category || null,
       order: order || 0
     });
 
-    await size.save();
-    await size.populate('category', 'name');
+    const freshSize = await Size.findByPk(size.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name'] }]
+    });
     
-    res.status(201).json(size);
+    res.status(201).json(freshSize);
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Size with this name already exists' });
     }
     res.status(400).json({ message: error.message });
@@ -63,7 +71,7 @@ export const createSize = async (req, res) => {
 // Update size (Admin only)
 export const updateSize = async (req, res) => {
   try {
-    const size = await Size.findById(req.params.id);
+    const size = await Size.findByPk(req.params.id);
     
     if (!size) {
       return res.status(404).json({ message: 'Size not found' });
@@ -77,17 +85,22 @@ export const updateSize = async (req, res) => {
     if (updateData.displayName) {
       updateData.displayName = updateData.displayName.trim();
     }
+    if (updateData.category !== undefined) {
+      updateData.categoryId = updateData.category || null;
+    }
     if (updateData.order !== undefined) {
       updateData.order = parseInt(updateData.order);
     }
 
-    Object.assign(size, updateData);
-    await size.save();
-    await size.populate('category', 'name');
+    await size.update(updateData);
+    
+    const freshSize = await Size.findByPk(size.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name'] }]
+    });
 
-    res.json(size);
+    res.json(freshSize);
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Size with this name already exists' });
     }
     res.status(400).json({ message: error.message });
@@ -97,16 +110,15 @@ export const updateSize = async (req, res) => {
 // Delete size (Admin only)
 export const deleteSize = async (req, res) => {
   try {
-    const size = await Size.findById(req.params.id);
+    const size = await Size.findByPk(req.params.id);
     
     if (!size) {
       return res.status(404).json({ message: 'Size not found' });
     }
 
-    await size.deleteOne();
+    await size.destroy();
     res.json({ message: 'Size deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-

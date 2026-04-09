@@ -1,66 +1,81 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const productSchema = new mongoose.Schema({
+const Product = sequelize.define('Product', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   title: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     trim: true
   },
   description: {
-    type: String,
-    required: true
+    type: DataTypes.TEXT,
+    allowNull: false
   },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
-    required: true
+  categoryId: {
+    type: DataTypes.INTEGER,
+    allowNull: false
   },
   subcategory: {
-    type: String,
+    type: DataTypes.STRING,
+    allowNull: true,
     trim: true
   },
-  images: [{
-    type: String,
-    required: true
-  }],
-  sizes: [{
-    type: String,
-    required: true
-  }],
-  colors: [{
-    type: String,
-    required: true
-  }],
+  images: {
+    type: DataTypes.JSON,
+    allowNull: false,
+    defaultValue: []
+  },
+  sizes: {
+    type: DataTypes.JSON,
+    allowNull: false,
+    defaultValue: []
+  },
+  colors: {
+    type: DataTypes.JSON,
+    allowNull: false,
+    defaultValue: []
+  },
   price: {
-    type: Number,
-    required: true,
-    min: 0
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   discountPrice: {
-    type: Number,
-    min: 0,
-    default: null
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: null,
+    validate: {
+      min: 0
+    }
   },
   featured: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   newArrival: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   },
   stock: {
-    type: Number,
-    default: 0,
-    min: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    validate: {
+      min: 0
+    }
   },
   freeDelivery: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 }, {
   timestamps: true
 });
 
-export default mongoose.model('Product', productSchema);
-
+export default Product;

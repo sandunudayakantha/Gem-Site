@@ -1,6 +1,9 @@
+import { Op } from 'sequelize';
 import StoreSettings from '../models/StoreSettings.js';
 import ContactMessage from '../models/ContactMessage.js';
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
 
 // Get settings
 export const getSettings = async (req, res) => {
@@ -18,12 +21,14 @@ export const updateSettings = async (req, res) => {
     let settings = await StoreSettings.findOne();
     
     if (!settings) {
-      settings = new StoreSettings({});
+      settings = await StoreSettings.create({});
     }
+
+    const updateData = {};
 
     // Handle nested form data
     if (req.body.contact) {
-      settings.contact = {
+      updateData.contact = {
         phone: req.body.contact.phone || settings.contact?.phone || '',
         callPhone: req.body.contact.callPhone || settings.contact?.callPhone || '',
         email: req.body.contact.email || settings.contact?.email || '',
@@ -33,16 +38,13 @@ export const updateSettings = async (req, res) => {
     }
 
     if (req.body.banner) {
-      // Handle multiple banner images
       let bannerImages = settings.banner?.images || [];
       
-      // If new banner images are uploaded
       if (req.files && req.files.bannerImages) {
         const newImages = req.files.bannerImages.map(file => `/uploads/${file.filename}`);
         bannerImages = [...bannerImages, ...newImages];
       }
       
-      // If single banner image is uploaded (for backward compatibility)
       if (req.files && req.files.bannerImage) {
         const singleImage = `/uploads/${req.files.bannerImage[0].filename}`;
         if (!bannerImages.includes(singleImage)) {
@@ -50,19 +52,37 @@ export const updateSettings = async (req, res) => {
         }
       }
       
-      // Handle image deletion (if bannerImagesToDelete is provided)
       if (req.body.bannerImagesToDelete) {
         const imagesToDelete = Array.isArray(req.body.bannerImagesToDelete) 
           ? req.body.bannerImagesToDelete 
           : [req.body.bannerImagesToDelete];
+        
+        // Delete original files from disk
+        imagesToDelete.forEach(imagePath => {
+          if (imagePath && typeof imagePath === 'string') {
+            // Remove the leading slash if it exists to join correctly with process.cwd()
+            const relativePath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+            const fullPath = path.join(process.cwd(), relativePath);
+            
+            if (fs.existsSync(fullPath)) {
+              try {
+                fs.unlinkSync(fullPath);
+                console.log(`Deleted file: ${fullPath}`);
+              } catch (err) {
+                console.error(`Error deleting file ${fullPath}:`, err);
+              }
+            }
+          }
+        });
+
         bannerImages = bannerImages.filter(img => !imagesToDelete.includes(img));
       }
       
-      settings.banner = {
-        title: req.body.banner.title || settings.banner?.title || '',
-        description: req.body.banner.description || settings.banner?.description || '',
-        images: bannerImages.length > 0 ? bannerImages : (settings.banner?.images || []),
-        image: bannerImages.length > 0 ? bannerImages[0] : (settings.banner?.image || null) // Keep for backward compatibility
+      updateData.banner = {
+        title: req.body.banner?.title || settings.banner?.title || '',
+        description: req.body.banner?.description || settings.banner?.description || '',
+        images: bannerImages,
+        image: bannerImages.length > 0 ? bannerImages[0] : null
       };
     }
 
@@ -71,7 +91,7 @@ export const updateSettings = async (req, res) => {
                      req.body.specialOffer.enabled === true || 
                      req.body.specialOffer.enabled === '1';
       
-      settings.specialOffer = {
+      updateData.specialOffer = {
         enabled: enabled,
         percentage: req.body.specialOffer.percentage ? parseFloat(req.body.specialOffer.percentage) : (settings.specialOffer?.percentage || 0),
         title: req.body.specialOffer.title || settings.specialOffer?.title || ''
@@ -79,10 +99,10 @@ export const updateSettings = async (req, res) => {
     }
 
     if (req.body.deliveryFee !== undefined) {
-      settings.deliveryFee = req.body.deliveryFee ? parseFloat(req.body.deliveryFee) : 0;
+      updateData.deliveryFee = req.body.deliveryFee ? parseFloat(req.body.deliveryFee) : 0;
     }
 
-    await settings.save();
+    await settings.update(updateData);
     res.json(settings);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -92,58 +112,41 @@ export const updateSettings = async (req, res) => {
 // Spam detection patterns
 const spamPatterns = [
   /(?:viagra|cialis|casino|poker|loan|credit|debt|free money|make money fast)/i,
-  /(?:http|https|www\.)/i, // URLs in message
+  /(?:http|https|www\.)/i, 
   /(?:click here|buy now|limited time|act now)/i,
-  /(?:\.com|\.net|\.org)/i // Domain extensions
+  /(?:\.com|\.net|\.org)/i 
 ];
 
-// Check if message is likely spam
 const isSpam = (name, email, message) => {
   const combinedText = `${name} ${email} ${message}`.toLowerCase();
-  
-  // Check for spam patterns
   for (const pattern of spamPatterns) {
-    if (pattern.test(combinedText)) {
-      return true;
-    }
+    if (pattern.test(combinedText)) return true;
   }
-  
-  // Check for excessive repetition
   const words = combinedText.split(/\s+/);
   const wordCounts = {};
   for (const word of words) {
     if (word.length > 3) {
       wordCounts[word] = (wordCounts[word] || 0) + 1;
-      if (wordCounts[word] > 5) {
-        return true; // Same word repeated more than 5 times
-      }
+      if (wordCounts[word] > 5) return true;
     }
   }
-  
-  // Check for suspicious email patterns
-  if (email.includes('+') && email.split('+').length > 2) {
-    return true; // Multiple plus signs (common spam technique)
-  }
-  
+  if (email.includes('+') && email.split('+').length > 2) return true;
   return false;
 };
 
-// Send contact form message (saves to database)
+// Send contact form message
 export const sendContactEmail = async (req, res) => {
   try {
-    const { name, email, phone, message, honeypot } = req.body;
+    const { name, email, phone, message, honeypot, subject } = req.body;
 
-    // Honeypot check - if filled, it's a bot
     if (honeypot) {
-      return res.status(200).json({ message: 'Message sent successfully!' }); // Silent fail for bots
+      return res.status(200).json({ message: 'Message sent successfully!' });
     }
 
-    // Validation
     if (!name || !email || !message) {
       return res.status(400).json({ message: 'Name, email, and message are required' });
     }
 
-    // Basic validation
     if (name.length < 2 || name.length > 200) {
       return res.status(400).json({ message: 'Name must be between 2 and 200 characters' });
     }
@@ -152,22 +155,21 @@ export const sendContactEmail = async (req, res) => {
       return res.status(400).json({ message: 'Message must be between 10 and 5000 characters' });
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ message: 'Invalid email address' });
     }
 
-    // Get IP address for rate limiting
     const ipAddress = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
 
-    // Rate limiting: Check if same IP/email sent message in last 5 minutes
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const recentMessages = await ContactMessage.countDocuments({
-      $or: [
-        { email: email.toLowerCase(), createdAt: { $gte: fiveMinutesAgo } },
-        { ipAddress: ipAddress, createdAt: { $gte: fiveMinutesAgo } }
-      ]
+    const recentMessages = await ContactMessage.count({
+      where: {
+        [Op.or]: [
+          { email: email.toLowerCase(), createdAt: { [Op.gte]: fiveMinutesAgo } },
+          { ipAddress: ipAddress, createdAt: { [Op.gte]: fiveMinutesAgo } }
+        ]
+      }
     });
 
     if (recentMessages > 0) {
@@ -176,11 +178,12 @@ export const sendContactEmail = async (req, res) => {
       });
     }
 
-    // Check for too many messages from same IP in last hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const hourlyMessages = await ContactMessage.countDocuments({
-      ipAddress: ipAddress,
-      createdAt: { $gte: oneHourAgo }
+    const hourlyMessages = await ContactMessage.count({
+      where: {
+        ipAddress: ipAddress,
+        createdAt: { [Op.gte]: oneHourAgo }
+      }
     });
 
     if (hourlyMessages >= 5) {
@@ -189,22 +192,19 @@ export const sendContactEmail = async (req, res) => {
       });
     }
 
-    // Spam detection
     const isSpamMessage = isSpam(name, email, message);
 
-    // Save message to database
-    const contactMessage = new ContactMessage({
+    const contactMessage = await ContactMessage.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       phone: phone ? phone.trim() : '',
+      subject: subject || 'No Subject',
       message: message.trim(),
       ipAddress: ipAddress,
       spam: isSpamMessage
     });
 
-    await contactMessage.save();
-
-    // Optionally send email if SMTP is configured (non-blocking)
+    // Optionally send email
     try {
       const settings = await StoreSettings.getSettings();
       const adminEmail = process.env.ADMIN_EMAIL || settings.contact.email;
@@ -224,7 +224,7 @@ export const sendContactEmail = async (req, res) => {
           from: `"${name}" <${process.env.SMTP_USER}>`,
           replyTo: email,
           to: adminEmail,
-          subject: `New Contact Form Message from ${name}${isSpamMessage ? ' [SPAM]' : ''}`,
+          subject: `${subject || 'New Contact Form Message'} from ${name}${isSpamMessage ? ' [SPAM]' : ''}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #333; border-bottom: 2px solid #000; padding-bottom: 10px;">
@@ -234,6 +234,7 @@ export const sendContactEmail = async (req, res) => {
                 <p><strong>Name:</strong> ${name}</p>
                 <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
                 <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+                <p><strong>Subject:</strong> ${subject || 'No Subject'}</p>
                 <p><strong>Message:</strong></p>
                 <div style="background-color: #f5f5f5; padding: 15px; border-left: 3px solid #000; margin-top: 10px;">
                   <p style="white-space: pre-wrap; margin: 0;">${message}</p>
@@ -246,13 +247,11 @@ export const sendContactEmail = async (req, res) => {
           `
         };
 
-        // Send email asynchronously (don't wait for it)
         transporter.sendMail(mailOptions).catch(err => {
           console.error('Failed to send notification email:', err);
         });
       }
     } catch (emailError) {
-      // Email sending is optional, just log the error
       console.error('Email notification error (non-critical):', emailError);
     }
 
@@ -262,4 +261,3 @@ export const sendContactEmail = async (req, res) => {
     res.status(500).json({ message: 'Failed to send message. Please try again later.' });
   }
 };
-

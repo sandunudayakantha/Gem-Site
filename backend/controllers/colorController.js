@@ -1,14 +1,20 @@
+import { Op } from 'sequelize';
 import Color from '../models/Color.js';
+import Category from '../models/Category.js';
 
 // Get all colors
 export const getColors = async (req, res) => {
   try {
     const { category } = req.query;
-    const query = category ? { $or: [{ category: category }, { category: null }] } : {};
+    const where = category ? { 
+      [Op.or]: [{ categoryId: category }, { categoryId: null }] 
+    } : {};
     
-    const colors = await Color.find(query)
-      .populate('category', 'name')
-      .sort({ order: 1, name: 1 });
+    const colors = await Color.findAll({
+      where,
+      include: [{ model: Category, as: 'category', attributes: ['name'] }],
+      order: [['order', 'ASC'], ['name', 'ASC']]
+    });
     
     res.json(colors);
   } catch (error) {
@@ -19,8 +25,9 @@ export const getColors = async (req, res) => {
 // Get single color
 export const getColor = async (req, res) => {
   try {
-    const color = await Color.findById(req.params.id)
-      .populate('category', 'name');
+    const color = await Color.findByPk(req.params.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name'] }]
+    });
     
     if (!color) {
       return res.status(404).json({ message: 'Color not found' });
@@ -41,20 +48,21 @@ export const createColor = async (req, res) => {
       return res.status(400).json({ message: 'Name and display name are required' });
     }
 
-    const color = new Color({
+    const color = await Color.create({
       name: name.toLowerCase().trim(),
       displayName: displayName.trim(),
       hexCode: hexCode || '#000000',
-      category: category || null,
+      categoryId: category || null,
       order: order || 0
     });
 
-    await color.save();
-    await color.populate('category', 'name');
+    const freshColor = await Color.findByPk(color.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name'] }]
+    });
     
-    res.status(201).json(color);
+    res.status(201).json(freshColor);
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Color with this name already exists' });
     }
     res.status(400).json({ message: error.message });
@@ -64,7 +72,7 @@ export const createColor = async (req, res) => {
 // Update color (Admin only)
 export const updateColor = async (req, res) => {
   try {
-    const color = await Color.findById(req.params.id);
+    const color = await Color.findByPk(req.params.id);
     
     if (!color) {
       return res.status(404).json({ message: 'Color not found' });
@@ -78,17 +86,22 @@ export const updateColor = async (req, res) => {
     if (updateData.displayName) {
       updateData.displayName = updateData.displayName.trim();
     }
+    if (updateData.category !== undefined) {
+      updateData.categoryId = updateData.category || null;
+    }
     if (updateData.order !== undefined) {
       updateData.order = parseInt(updateData.order);
     }
 
-    Object.assign(color, updateData);
-    await color.save();
-    await color.populate('category', 'name');
+    await color.update(updateData);
+    
+    const freshColor = await Color.findByPk(color.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name'] }]
+    });
 
-    res.json(color);
+    res.json(freshColor);
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: 'Color with this name already exists' });
     }
     res.status(400).json({ message: error.message });
@@ -98,16 +111,15 @@ export const updateColor = async (req, res) => {
 // Delete color (Admin only)
 export const deleteColor = async (req, res) => {
   try {
-    const color = await Color.findById(req.params.id);
+    const color = await Color.findByPk(req.params.id);
     
     if (!color) {
       return res.status(404).json({ message: 'Color not found' });
     }
 
-    await color.deleteOne();
+    await color.destroy();
     res.json({ message: 'Color deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-

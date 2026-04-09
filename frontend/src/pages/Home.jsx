@@ -107,6 +107,9 @@ const Home = () => {
     }
 
     const interval = setInterval(() => {
+      // Don't advance if the tab is not visible to prevent sync issues
+      if (document.visibilityState === 'hidden') return;
+
       setSlideDirection('right')
       setPrevBannerIndex(currentIndexRef.current)
       setCurrentBannerIndex((prev) => {

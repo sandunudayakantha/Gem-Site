@@ -1,102 +1,59 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const orderItemSchema = new mongoose.Schema({
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true
+const Order = sequelize.define('Order', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
   },
-  title: String,
-  size: String,
-  color: String,
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1
-  },
-  price: {
-    type: Number,
-    required: true
-  }
-});
-
-const orderSchema = new mongoose.Schema({
   orderNumber: {
-    type: String,
+    type: DataTypes.STRING,
     unique: true,
-    required: false // Will be generated in pre-save hook
+    allowNull: true // Generated before save
   },
-  items: [orderItemSchema],
+  items: {
+    type: DataTypes.JSON, // Array of order items
+    allowNull: false
+  },
   customer: {
-    name: {
-      type: String,
-      required: true
-    },
-    phone: {
-      type: String,
-      required: true
-    },
-    email: {
-      type: String,
-      required: true
-    },
-    address: {
-      type: String,
-      required: true
-    }
+    type: DataTypes.JSON, // Object with name, phone, email, address
+    allowNull: false
   },
   totalAmount: {
-    type: Number,
-    required: true,
-    min: 0
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false,
+    validate: {
+      min: 0
+    }
   },
   deliveryFee: {
-    type: Number,
-    default: 0,
-    min: 0
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0,
+    validate: {
+      min: 0
+    }
   },
   paymentMethod: {
-    type: String,
-    default: 'Cash on Delivery'
+    type: DataTypes.STRING,
+    defaultValue: 'Cash on Delivery'
   },
   status: {
-    type: String,
-    enum: ['Pending', 'Processing', 'Dispatched', 'Delivered'],
-    default: 'Pending'
+    type: DataTypes.ENUM('Pending', 'Processing', 'Dispatched', 'Delivered'),
+    defaultValue: 'Pending'
   }
 }, {
-  timestamps: true
-});
-
-// Generate order number before saving (always generate if not provided)
-orderSchema.pre('save', async function(next) {
-  // Always generate orderNumber if it doesn't exist
-  if (!this.orderNumber || this.orderNumber.trim() === '') {
-    try {
-      // Use a more unique order number with timestamp and random component
-      // This combination makes collisions extremely unlikely
-      const timestamp = Date.now();
-      const random = Math.floor(Math.random() * 100000);
-      const processId = process.pid || 0;
-      this.orderNumber = `ORD-${timestamp}-${random}-${processId}`;
-    } catch (error) {
-      console.error('Error generating order number:', error);
-      return next(error);
+  timestamps: true,
+  hooks: {
+    beforeValidate: (order) => {
+      if (!order.orderNumber || order.orderNumber.trim() === '') {
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 100000);
+        const processId = process.pid || 0;
+        order.orderNumber = `ORD-${timestamp}-${random}-${processId}`;
+      }
     }
   }
-  next();
 });
 
-// Also generate on validate to ensure it's set before validation
-orderSchema.pre('validate', function(next) {
-  if (!this.orderNumber || this.orderNumber.trim() === '') {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 100000);
-    const processId = process.pid || 0;
-    this.orderNumber = `ORD-${timestamp}-${random}-${processId}`;
-  }
-  next();
-});
-
-export default mongoose.model('Order', orderSchema);
-
+export default Order;

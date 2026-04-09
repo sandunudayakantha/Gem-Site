@@ -1,35 +1,42 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const colorSchema = new mongoose.Schema({
+const Color = sequelize.define('Color', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   name: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
     trim: true,
-    lowercase: true
+    set(val) {
+      if (val) this.setDataValue('name', val.toLowerCase());
+    }
   },
   displayName: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     trim: true
   },
   hexCode: {
-    type: String,
+    type: DataTypes.STRING,
     trim: true,
-    default: '#000000'
+    defaultValue: '#000000'
   },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
-    default: null // null means available for all categories
+  categoryId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null
   },
   order: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   }
 }, {
   timestamps: true
 });
 
-export default mongoose.model('Color', colorSchema);
-
+export default Color;

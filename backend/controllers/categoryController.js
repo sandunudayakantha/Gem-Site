@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import Category from '../models/Category.js';
 import Product from '../models/Product.js';
 
@@ -8,16 +9,21 @@ export const getCategories = async (req, res) => {
     
     if (includeSubcategories === 'true') {
       // Return all categories (main + subcategories) for admin management
-      const categories = await Category.find()
-        .populate('subcategories')
-        .populate('parent', 'name')
-        .sort({ parent: 1, name: 1 });
+      const categories = await Category.findAll({
+        include: [
+          { model: Category, as: 'subcategories' },
+          { model: Category, as: 'parent', attributes: ['name'] }
+        ],
+        order: [['parentId', 'ASC'], ['name', 'ASC']]
+      });
       res.json(categories);
     } else {
       // Return only main categories with populated subcategories (for frontend)
-      const categories = await Category.find({ parent: null })
-        .populate('subcategories')
-        .sort({ name: 1 });
+      const categories = await Category.findAll({
+        where: { parentId: null },
+        include: [{ model: Category, as: 'subcategories' }],
+        order: [['name', 'ASC']]
+      });
       res.json(categories);
     }
   } catch (error) {
@@ -28,9 +34,12 @@ export const getCategories = async (req, res) => {
 // Get single category
 export const getCategory = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id)
-      .populate('subcategories')
-      .populate('parent');
+    const category = await Category.findByPk(req.params.id, {
+      include: [
+        { model: Category, as: 'subcategories' },
+        { model: Category, as: 'parent' }
+      ]
+    });
     
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
@@ -54,17 +63,19 @@ export const createCategory = async (req, res) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
     
     // Normalize parent: convert empty string to null, keep valid IDs as-is
-    const normalizedParent = parent && parent.trim() !== '' ? parent : null;
+    const normalizedParentId = parent && parent.trim() !== '' ? parseInt(parent) : null;
     
     // Check if category with same slug exists under the same parent
-    // This check ensures uniqueness within the same parent only
     const existingCategory = await Category.findOne({ 
-      slug, 
-      parent: normalizedParent 
+      where: {
+        slug, 
+        parentId: normalizedParentId 
+      }
     });
+
     if (existingCategory) {
       return res.status(400).json({ 
-        message: normalizedParent 
+        message: normalizedParentId 
           ? 'Subcategory with this name already exists under this parent' 
           : 'Category with this name already exists' 
       });
@@ -73,38 +84,29 @@ export const createCategory = async (req, res) => {
     const categoryData = {
       name,
       slug,
+      parentId: normalizedParentId,
       image: req.file ? `/uploads/${req.file.filename}` : image || null
     };
 
-    if (normalizedParent) {
-      const parentCategory = await Category.findById(normalizedParent);
+    if (normalizedParentId) {
+      const parentCategory = await Category.findByPk(normalizedParentId);
       if (!parentCategory) {
         return res.status(404).json({ message: 'Parent category not found' });
       }
-      categoryData.parent = normalizedParent;
-    } else {
-      // Explicitly set parent to null for main categories
-      categoryData.parent = null;
     }
 
-    const category = new Category(categoryData);
-    await category.save();
+    const category = await Category.create(categoryData);
+    
+    const freshCategory = await Category.findByPk(category.id, {
+      include: [{ model: Category, as: 'parent', attributes: ['name'] }]
+    });
 
-    // If parent exists, add this category to parent's subcategories
-    if (normalizedParent) {
-      await Category.findByIdAndUpdate(normalizedParent, {
-        $push: { subcategories: category._id }
-      });
-    }
-
-    await category.populate('parent', 'name');
-    res.status(201).json(category);
+    res.status(201).json(freshCategory);
   } catch (error) {
-    if (error.code === 11000) {
-      // MongoDB duplicate key error - compound unique index violation
-      const parent = req.body.parent && req.body.parent.trim() !== '' ? req.body.parent : null;
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const parentId = req.body.parent && req.body.parent.trim() !== '' ? parseInt(req.body.parent) : null;
       return res.status(400).json({ 
-        message: parent 
+        message: parentId 
           ? 'Subcategory with this name already exists under this parent' 
           : 'Category with this name already exists' 
       });
@@ -116,30 +118,30 @@ export const createCategory = async (req, res) => {
 // Update category (Admin only)
 export const updateCategory = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findByPk(req.params.id);
     
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
     }
 
     const updateData = { ...req.body };
-    const oldParent = category.parent;
-    const newParent = req.body.parent || null;
+    const newParentId = req.body.parent !== undefined ? (req.body.parent && req.body.parent.trim() !== '' ? parseInt(req.body.parent) : null) : category.parentId;
 
     if (req.body.name && req.body.name !== category.name) {
       const newSlug = req.body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
       
       // Check if slug already exists under the new parent (or same parent if not changing)
-      const checkParent = newParent !== undefined ? newParent : category.parent;
       const existingCategory = await Category.findOne({ 
-        slug: newSlug, 
-        parent: checkParent || null,
-        _id: { $ne: category._id }
+        where: {
+          slug: newSlug, 
+          parentId: newParentId,
+          id: { [Op.ne]: category.id }
+        }
       });
       
       if (existingCategory) {
         return res.status(400).json({ 
-          message: checkParent 
+          message: newParentId 
             ? 'Subcategory with this name already exists under this parent' 
             : 'Category with this name already exists' 
         });
@@ -152,39 +154,22 @@ export const updateCategory = async (req, res) => {
       updateData.image = `/uploads/${req.file.filename}`;
     }
 
-    // Handle parent change
-    if (newParent !== undefined && newParent !== oldParent?.toString()) {
-      // Remove from old parent's subcategories
-      if (oldParent) {
-        await Category.findByIdAndUpdate(oldParent, {
-          $pull: { subcategories: category._id }
-        });
-      }
-
-      // Add to new parent's subcategories
-      if (newParent) {
-        const parentCategory = await Category.findById(newParent);
-        if (!parentCategory) {
-          return res.status(404).json({ message: 'Parent category not found' });
-        }
-        await Category.findByIdAndUpdate(newParent, {
-          $addToSet: { subcategories: category._id }
-        });
-        updateData.parent = newParent;
-      } else {
-        // Removing parent - making it a main category
-        updateData.parent = null;
-      }
+    if (req.body.parent !== undefined) {
+      updateData.parentId = newParentId;
     }
 
-    Object.assign(category, updateData);
-    await category.save();
-    await category.populate('subcategories');
-    await category.populate('parent');
+    await category.update(updateData);
+    
+    const freshCategory = await Category.findByPk(category.id, {
+      include: [
+        { model: Category, as: 'subcategories' },
+        { model: Category, as: 'parent' }
+      ]
+    });
 
-    res.json(category);
+    res.json(freshCategory);
   } catch (error) {
-    if (error.code === 11000) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ 
         message: 'Category with this name already exists under this parent' 
       });
@@ -196,36 +181,26 @@ export const updateCategory = async (req, res) => {
 // Delete category (Admin only)
 export const deleteCategory = async (req, res) => {
   try {
-    const category = await Category.findById(req.params.id);
+    const category = await Category.findByPk(req.params.id);
     
     if (!category) {
       return res.status(404).json({ message: 'Category not found' });
     }
 
     // Check if category has products
-    const productsCount = await Product.countDocuments({ category: category._id });
+    const productsCount = await Product.count({ where: { categoryId: category.id } });
     if (productsCount > 0) {
       return res.status(400).json({ 
         message: `Cannot delete category. ${productsCount} product(s) are using this category.` 
       });
     }
 
-    // Remove from parent's subcategories if exists
-    if (category.parent) {
-      await Category.findByIdAndUpdate(category.parent, {
-        $pull: { subcategories: category._id }
-      });
-    }
+    // Delete subcategories first (or handle via CASCADE in DB if desired, but here we do it explicitly)
+    await Category.destroy({ where: { parentId: category.id } });
 
-    // Delete subcategories first
-    if (category.subcategories && category.subcategories.length > 0) {
-      await Category.deleteMany({ _id: { $in: category.subcategories } });
-    }
-
-    await category.deleteOne();
+    await category.destroy();
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { Op } from 'sequelize';
 import AdminUser from '../models/AdminUser.js';
 
 // Generate JWT Token
@@ -18,7 +19,9 @@ export const adminLogin = async (req, res) => {
     }
 
     const admin = await AdminUser.findOne({ 
-      $or: [{ username }, { email: username }] 
+      where: {
+        [Op.or]: [{ username }, { email: username }] 
+      }
     });
 
     if (!admin) {
@@ -31,12 +34,12 @@ export const adminLogin = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const token = generateToken(admin._id);
+    const token = generateToken(admin.id);
 
     res.json({
       token,
       admin: {
-        id: admin._id,
+        id: admin.id,
         username: admin.username,
         email: admin.email
       }
@@ -49,7 +52,9 @@ export const adminLogin = async (req, res) => {
 // Get current admin (protected)
 export const getCurrentAdmin = async (req, res) => {
   try {
-    const admin = await AdminUser.findById(req.user._id).select('-password');
+    const admin = await AdminUser.findByPk(req.user.id, {
+      attributes: { exclude: ['password'] }
+    });
     res.json(admin);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -66,27 +71,27 @@ export const registerAdmin = async (req, res) => {
     }
 
     const existingAdmin = await AdminUser.findOne({
-      $or: [{ username }, { email }]
+      where: {
+        [Op.or]: [{ username }, { email }]
+      }
     });
 
     if (existingAdmin) {
       return res.status(400).json({ message: 'Admin already exists' });
     }
 
-    const admin = new AdminUser({
+    const admin = await AdminUser.create({
       username,
       email,
       password
     });
 
-    await admin.save();
-
-    const token = generateToken(admin._id);
+    const token = generateToken(admin.id);
 
     res.status(201).json({
       token,
       admin: {
-        id: admin._id,
+        id: admin.id,
         username: admin.username,
         email: admin.email
       }
@@ -95,4 +100,3 @@ export const registerAdmin = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
-

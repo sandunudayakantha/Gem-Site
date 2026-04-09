@@ -1,30 +1,37 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const sizeSchema = new mongoose.Schema({
+const Size = sequelize.define('Size', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   name: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     unique: true,
     trim: true,
-    uppercase: true
+    set(val) {
+      if (val) this.setDataValue('name', val.toLowerCase());
+    }
   },
   displayName: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     trim: true
   },
-  category: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
-    default: null // null means available for all categories
+  categoryId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null
   },
   order: {
-    type: Number,
-    default: 0
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   }
 }, {
   timestamps: true
 });
 
-export default mongoose.model('Size', sizeSchema);
-
+export default Size;

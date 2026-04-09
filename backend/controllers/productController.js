@@ -1,3 +1,4 @@
+import { Op } from 'sequelize';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import StoreSettings from '../models/StoreSettings.js';
@@ -6,89 +7,90 @@ import StoreSettings from '../models/StoreSettings.js';
 export const getProducts = async (req, res) => {
   try {
     const { category, featured, newArrival, search } = req.query;
-    const query = {};
+    const where = {};
     const andConditions = [];
 
-    // Handle category filtering (supports both main categories and subcategories)
+    // Handle category filtering
     if (category && category !== 'null' && category !== 'undefined') {
-      // Validate that category is a valid MongoDB ObjectId format
-      const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(category);
-      
-      if (!isValidObjectId) {
-        // Invalid category ID format, return empty results
-        query.category = 'invalid-id-that-will-not-match';
+      const categoryId = parseInt(category);
+      if (isNaN(categoryId)) {
+        where.categoryId = -1; // Invalid ID
       } else {
-        const categoryDoc = await Category.findById(category);
+        const categoryDoc = await Category.findByPk(categoryId, {
+          include: [{ model: Category, as: 'subcategories' }]
+        });
         
         if (categoryDoc) {
-          if (categoryDoc.parent) {
-            // It's a subcategory - filter by subcategory ID or parent category with matching subcategory name
+          if (categoryDoc.parentId) {
+            // It's a subcategory
             andConditions.push({
-              $or: [
-                { category: category }, // Products directly assigned to this subcategory
+              [Op.or]: [
+                { categoryId: categoryId },
                 {
-                  category: categoryDoc.parent, // Products assigned to parent category
-                  subcategory: { $regex: categoryDoc.name, $options: 'i' } // With matching subcategory name
+                  categoryId: categoryDoc.parentId,
+                  subcategory: { [Op.like]: `%${categoryDoc.name}%` }
                 }
               ]
             });
           } else {
-            // It's a main category - show all products in this category and its subcategories
-            const subcategoryIds = categoryDoc.subcategories || [];
+            // It's a main category
+            const subcategoryIds = categoryDoc.subcategories.map(s => s.id);
             andConditions.push({
-              $or: [
-                { category: category }, // Products in main category
-                { category: { $in: subcategoryIds } } // Products in subcategories
+              [Op.or]: [
+                { categoryId: categoryId },
+                { categoryId: { [Op.in]: subcategoryIds } }
               ]
             });
           }
         } else {
-          // Category not found, return empty results
-          query.category = 'invalid-id-that-will-not-match';
+          where.categoryId = -1;
         }
       }
     }
     
     // Handle featured filter
     if (featured === 'true') {
-      query.featured = true;
+      where.featured = true;
     }
     
     // Handle new arrival filter
     if (newArrival === 'true') {
-      query.newArrival = true;
+      where.newArrival = true;
     }
     
     // Handle search filter
     if (search) {
       andConditions.push({
-        $or: [
-          { title: { $regex: search, $options: 'i' } },
-          { description: { $regex: search, $options: 'i' } }
+        [Op.or]: [
+          { title: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } }
         ]
       });
     }
 
-    // Combine all conditions
     if (andConditions.length > 0) {
-      query.$and = andConditions;
+      where[Op.and] = andConditions;
     }
 
-    const products = await Product.find(query)
-      .populate('category', 'name slug')
-      .sort({ createdAt: -1 });
+    const products = await Product.findAll({
+      where,
+      include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }],
+      order: [['createdAt', 'DESC']]
+    });
 
     // Apply special offer if enabled
     const settings = await StoreSettings.getSettings();
-    if (settings.specialOffer.enabled && settings.specialOffer.percentage > 0) {
-      products.forEach(product => {
+    const result = products.map(p => {
+      const product = p.toJSON();
+      if (settings.specialOffer.enabled && settings.specialOffer.percentage > 0) {
         if (!product.discountPrice) {
           product.discountPrice = product.price * (1 - settings.specialOffer.percentage / 100);
         }
-      });
-    }
+      }
+      return product;
+    });
 
-    res.json(products);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -97,12 +99,15 @@ export const getProducts = async (req, res) => {
 // Get single product
 export const getProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-      .populate('category', 'name slug');
+    const productDoc = await Product.findByPk(req.params.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }]
+    });
 
-    if (!product) {
+    if (!productDoc) {
       return res.status(404).json({ message: 'Product not found' });
     }
+
+    const product = productDoc.toJSON();
 
     // Apply special offer if enabled
     const settings = await StoreSettings.getSettings();
@@ -127,9 +132,10 @@ export const createProduct = async (req, res) => {
       return res.status(400).json({ message: 'At least one image is required' });
     }
 
-    const product = new Product({
+    const productData = {
       ...req.body,
       images: images,
+      categoryId: parseInt(req.body.category),
       price: parseFloat(req.body.price),
       discountPrice: req.body.discountPrice ? parseFloat(req.body.discountPrice) : null,
       featured: req.body.featured === 'true' || req.body.featured === true,
@@ -137,12 +143,15 @@ export const createProduct = async (req, res) => {
       sizes: Array.isArray(req.body.sizes) ? req.body.sizes : req.body.sizes?.split(',').map(s => s.trim()) || [],
       colors: Array.isArray(req.body.colors) ? req.body.colors : req.body.colors?.split(',').map(c => c.trim()) || [],
       stock: parseInt(req.body.stock) || 0
-    });
+    };
 
-    await product.save();
-    await product.populate('category', 'name slug');
+    const product = await Product.create(productData);
     
-    res.status(201).json(product);
+    const freshProduct = await Product.findByPk(product.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }]
+    });
+    
+    res.status(201).json(freshProduct);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -151,9 +160,9 @@ export const createProduct = async (req, res) => {
 // Update product (Admin only)
 export const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const productDoc = await Product.findByPk(req.params.id);
     
-    if (!product) {
+    if (!productDoc) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
@@ -161,9 +170,10 @@ export const updateProduct = async (req, res) => {
     
     if (req.files && req.files.length > 0) {
       const newImages = req.files.map(file => `/uploads/${file.filename}`);
-      updateData.images = [...product.images, ...newImages];
+      updateData.images = [...(productDoc.images || []), ...newImages];
     }
 
+    if (updateData.category) updateData.categoryId = parseInt(updateData.category);
     if (updateData.price) updateData.price = parseFloat(updateData.price);
     if (updateData.discountPrice) updateData.discountPrice = parseFloat(updateData.discountPrice);
     if (updateData.featured !== undefined) updateData.featured = updateData.featured === 'true' || updateData.featured === true;
@@ -176,11 +186,13 @@ export const updateProduct = async (req, res) => {
     }
     if (updateData.stock !== undefined) updateData.stock = parseInt(updateData.stock);
 
-    Object.assign(product, updateData);
-    await product.save();
-    await product.populate('category', 'name slug');
+    await productDoc.update(updateData);
+    
+    const freshProduct = await Product.findByPk(productDoc.id, {
+      include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }]
+    });
 
-    res.json(product);
+    res.json(freshProduct);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -189,16 +201,15 @@ export const updateProduct = async (req, res) => {
 // Delete product (Admin only)
 export const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findByPk(req.params.id);
     
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    await product.deleteOne();
+    await product.destroy();
     res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-

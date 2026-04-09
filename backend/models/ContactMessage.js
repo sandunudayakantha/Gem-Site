@@ -1,50 +1,58 @@
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import sequelize from '../config/database.js';
 
-const contactMessageSchema = new mongoose.Schema({
+const ContactMessage = sequelize.define('ContactMessage', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
   name: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 200
+    type: DataTypes.STRING,
+    allowNull: false,
+    trim: true
   },
   email: {
-    type: String,
-    required: true,
+    type: DataTypes.STRING,
+    allowNull: false,
     trim: true,
-    lowercase: true,
-    maxlength: 200
+    validate: {
+      isEmail: true
+    }
   },
   phone: {
-    type: String,
-    trim: true,
-    maxlength: 50
+    type: DataTypes.STRING,
+    allowNull: true,
+    trim: true
+  },
+  subject: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'No Subject',
+    trim: true
   },
   message: {
-    type: String,
-    required: true,
-    trim: true,
-    maxlength: 5000
+    type: DataTypes.TEXT,
+    allowNull: false
   },
   ipAddress: {
-    type: String,
-    default: null
-  },
-  read: {
-    type: Boolean,
-    default: false
+    type: DataTypes.STRING,
+    allowNull: true
   },
   spam: {
-    type: Boolean,
-    default: false
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  read: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  status: {
+    type: DataTypes.ENUM('New', 'Read', 'Replied'),
+    defaultValue: 'New'
   }
 }, {
   timestamps: true
 });
 
-// Index for spam prevention queries
-contactMessageSchema.index({ email: 1, createdAt: -1 });
-contactMessageSchema.index({ ipAddress: 1, createdAt: -1 });
-contactMessageSchema.index({ read: 1, createdAt: -1 });
-
-export default mongoose.model('ContactMessage', contactMessageSchema);
-
+export default ContactMessage;
