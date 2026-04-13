@@ -39,7 +39,7 @@ const Login = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-3xl font-bold text-accent mb-2 text-center">Admin Login</h1>
-        <p className="text-gray-600 text-center mb-8">SJ Clothing Admin Panel</p>
+        <p className="text-gray-600 text-center mb-8">A S Gems Admin Panel</p>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>

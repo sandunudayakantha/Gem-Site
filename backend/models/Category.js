@@ -28,9 +28,17 @@ const Category = sequelize.define('Category', {
     type: DataTypes.STRING,
     allowNull: true,
     defaultValue: null
+  },
+  _id: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.id;
+    }
   }
 }, {
   timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
   indexes: [
     {
       unique: true,

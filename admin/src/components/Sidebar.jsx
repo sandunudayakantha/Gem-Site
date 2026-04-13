@@ -5,7 +5,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { path: '/admin/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/admin/products', label: 'Products', icon: '👕' },
+    { path: '/admin/products', label: 'Products', icon: '💎' },
     { path: '/admin/categories', label: 'Categories', icon: '📁' },
     { path: '/admin/sizes', label: 'Sizes', icon: '📏' },
     { path: '/admin/colors', label: 'Colors', icon: '🎨' },
@@ -16,8 +16,11 @@ const Sidebar = () => {
 
   return (
     <div className="w-64 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0">
-      <div className="p-6 border-b border-gray-200">
-        <h1 className="text-xl font-bold text-accent">SJ Clothing Admin</h1>
+      <div className="p-6">
+        <h1 className="text-2xl font-light tracking-widest uppercase text-black">
+          A S Gems
+        </h1>
+        <p className="text-xs text-gray-400 mt-1 uppercase tracking-tighter">Admin Panel</p>
       </div>
       <nav className="p-4">
         <ul className="space-y-2">

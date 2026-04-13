@@ -66,7 +66,7 @@ app.use('/api/colors', colorRoutes);
 app.use('/api/contact-messages', contactMessageRoutes);
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'SJ Clothing API is running' });
+  res.json({ status: 'OK', message: 'A S Gems API is running' });
 });
 
 // Sync database and start server

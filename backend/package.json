@@ -1,7 +1,7 @@
 {
-  "name": "sjclothing-backend",
+  "name": "asgems-backend",
   "version": "1.0.0",
-  "description": "Backend API for SJ Clothing E-commerce Store",
+  "description": "Backend API for AS Gems E-commerce Store",
   "main": "server.js",
   "type": "module",
   "scripts": {

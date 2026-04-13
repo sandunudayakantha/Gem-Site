@@ -40,7 +40,7 @@ const Footer = () => {
           <div>
             <Link to="/" className="block mb-6">
               <span className="text-2xl font-light tracking-widest uppercase">
-                SJ Clothing
+                A S Gems
               </span>
             </Link>
             <p className="text-sm text-white/70 font-light tracking-wide leading-relaxed mb-6">
@@ -105,18 +105,6 @@ const Footer = () => {
                 All Products
               </Link>
               <Link
-                to="/products?featured=true"
-                className="block text-xs text-white/70 hover:text-white transition-colors duration-300 font-light tracking-wide"
-              >
-                Featured
-              </Link>
-              <Link
-                to="/products?newArrival=true"
-                className="block text-xs text-white/70 hover:text-white transition-colors duration-300 font-light tracking-wide"
-              >
-                New Arrivals
-              </Link>
-              <Link
                 to="/contact"
                 className="block text-xs text-white/70 hover:text-white transition-colors duration-300 font-light tracking-wide"
               >
@@ -166,7 +154,7 @@ const Footer = () => {
         <div className="mt-16 pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-white/50 font-light tracking-wide">
-              © {new Date().getFullYear()} SJ Clothing. All rights reserved.
+              © {new Date().getFullYear()} A S Gems. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
               <Link
