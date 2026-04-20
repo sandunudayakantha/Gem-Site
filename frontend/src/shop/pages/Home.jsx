@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import api, { getImageUrl } from '../../shared/config/api'
 import ProductCard from '../components/ProductCard'
 import Loading from '../components/Loading'
+import ourCollectionBg from '../../shared/images/our-collection.jpg'
 
 const Home = () => {
   const [products, setProducts] = useState([])
@@ -259,8 +260,14 @@ const Home = () => {
       </section>
 
       {/* Products Section */}
-      <section className="py-24 md:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-24 md:py-32 overflow-hidden">
+        {/* Background Image with Transparency Overlay */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-fixed bg-center opacity-10"
+          style={{ backgroundImage: `url(${ourCollectionBg})` }}
+        ></div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-baseline mb-16">
             <h2 className="text-4xl md:text-5xl font-light tracking-tight text-black">Our Collection</h2>
             <Link

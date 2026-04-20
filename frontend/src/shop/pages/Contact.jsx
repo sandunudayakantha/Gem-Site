@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import api from '../../shared/config/api'
 import Loading from '../components/Loading'
+import contactHeroBg from '../../shared/images/contact-us.jpg'
+import contactContentBg from '../../shared/images/contact-us-back.jpg'
 
 const Contact = () => {
   const [settings, setSettings] = useState(null)
@@ -71,20 +73,33 @@ const Contact = () => {
   return (
     <div className="w-full">
       {/* Hero Header Section */}
-      <section className="bg-black text-white py-24 md:py-32">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+      <section className="relative bg-black text-white py-24 md:py-32 overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center opacity-60"
+          style={{ backgroundImage: `url(${contactHeroBg})` }}
+        ></div>
+        <div className="absolute inset-0 z-10 bg-black/40"></div>
+
+        <div className="relative z-20 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-light tracking-tight mb-6">
             Contact Us
           </h1>
-          <p className="text-lg md:text-xl text-white/80 font-light tracking-wide max-w-2xl">
+          <p className="text-lg md:text-xl text-white/90 font-light tracking-wide max-w-2xl">
             We'd love to hear from you. Get in touch with our team.
           </p>
         </div>
       </section>
 
       {/* Contact Content */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+      <section className="relative py-16 md:py-24 overflow-hidden">
+        {/* Subtle Background Image with Texture Overlay */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-fixed bg-center opacity-10"
+          style={{ backgroundImage: `url(${contactContentBg})` }}
+        ></div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24">
             {/* Contact Information */}
             <div>

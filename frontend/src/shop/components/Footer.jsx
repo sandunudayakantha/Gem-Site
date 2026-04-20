@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import api from '../../shared/config/api'
+import footerBg from '../../shared/images/footer.jpg'
 
 const Footer = () => {
   const [settings, setSettings] = useState(null)
@@ -32,9 +33,16 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-black text-white">
+    <footer className="relative bg-black text-white overflow-hidden">
+      {/* Background Image with Dark Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center opacity-40"
+        style={{ backgroundImage: `url(${footerBg})` }}
+      ></div>
+      <div className="absolute inset-0 z-0 bg-black/60"></div>
+
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 md:py-20">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16">
           {/* Brand Section */}
           <div>
@@ -151,7 +159,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-16 pt-8 border-t border-white/10">
+        <div className="relative z-10 mt-16 pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-white/50 font-light tracking-wide">
               © {new Date().getFullYear()} A S Gems. All rights reserved.
