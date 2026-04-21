@@ -5,39 +5,49 @@ import ProductCard from '../components/ProductCard'
 import Loading from '../components/Loading'
 import api from '../../shared/config/api'
 import productsHeroBg from '../../shared/images/all-products.jpg'
-import productsGridBg from '../../shared/images/all-products-back.jpg'
+import productsGridBg from '../../shared/images/all-products-back.jpeg'
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
   const [categories, setCategories] = useState([])
+  const [expandedCategory, setExpandedCategory] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
-  
+
+  const pageParam = searchParams.get('page')
+  const page = pageParam ? parseInt(pageParam) : 1
   const categoryParam = searchParams.get('category')
   const featured = searchParams.get('featured')
   const newArrival = searchParams.get('newArrival')
   const search = searchParams.get('search')
-
-  // Filter out "null" string values from URL params
   const category = categoryParam && categoryParam !== 'null' ? categoryParam : null
 
-  const { products, loading } = useProducts({
+  const { products, pagination, loading } = useProducts({
     category: category,
     featured: featured === 'true' ? 'true' : null,
     newArrival: newArrival === 'true' ? 'true' : null,
-    search: search || null
+    search: search || null,
+    page: page,
+    limit: 8
   })
 
   useEffect(() => {
     fetchCategories()
-    // Only set selected category if it's a valid ID (not "null" string)
-    if (category && category !== 'null' && category !== 'undefined') {
+    if (category) {
       setSelectedCategory(category)
+      // Auto-expand parent if a subcategory is selected
+      if (categories.length > 0) {
+        const parent = categories.find(c => 
+          c._id === category || c.subcategories?.some(s => s._id === category)
+        )
+        if (parent) setExpandedCategory(parent._id)
+      }
     } else {
       setSelectedCategory(null)
+      setExpandedCategory(null)
     }
-  }, [category])
+  }, [category, categories.length])
 
   const fetchCategories = async () => {
     try {
@@ -48,33 +58,51 @@ const Products = () => {
     }
   }
 
+  const handlePageChange = (newPage) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('page', newPage)
+    navigate(`/products?${params.toString()}`)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchTerm.trim()) {
       const params = new URLSearchParams()
       params.set('search', searchTerm.trim())
+      params.set('page', 1)
       navigate(`/products?${params.toString()}`)
     }
   }
 
-  const handleCategoryFilter = (categoryId) => {
+  const handleMainCategoryClick = (catId) => {
     const params = new URLSearchParams()
     
-    // Only add category if it's a valid ID (not null)
-    if (categoryId && categoryId !== null) {
-      if (categoryId === selectedCategory) {
-        // Remove filter if clicking same category
-        setSelectedCategory(null)
-      } else {
-        setSelectedCategory(categoryId)
-        params.set('category', categoryId)
-      }
-    } else {
-      // Clear category filter
+    if (catId === null) {
+      setExpandedCategory(null)
       setSelectedCategory(null)
+    } else {
+      // If clicking same category, maybe toggle expansion or just select
+      setExpandedCategory(catId)
+      setSelectedCategory(catId)
+      params.set('category', catId)
     }
     
-    // Preserve other filters
+    params.set('page', 1)
+    if (featured === 'true') params.set('featured', featured)
+    if (newArrival === 'true') params.set('newArrival', newArrival)
+    if (search) params.set('search', search)
+    
+    const queryString = params.toString()
+    navigate(queryString ? `/products?${queryString}` : '/products')
+  }
+
+  const handleSubCategoryClick = (subId) => {
+    const params = new URLSearchParams()
+    setSelectedCategory(subId)
+    params.set('category', subId)
+    
+    params.set('page', 1)
     if (featured === 'true') params.set('featured', featured)
     if (newArrival === 'true') params.set('newArrival', newArrival)
     if (search) params.set('search', search)
@@ -85,6 +113,7 @@ const Products = () => {
 
   const clearFilters = () => {
     setSelectedCategory(null)
+    setExpandedCategory(null)
     setSearchTerm('')
     navigate('/products')
   }
@@ -94,8 +123,14 @@ const Products = () => {
     if (newArrival === 'true') return 'New Arrivals'
     if (search) return `Search: "${search}"`
     if (category) {
-      const cat = categories.find(c => c._id === category)
-      return cat ? cat.name : 'Products'
+      // Find name in main or subcategories
+      let catName = 'Products'
+      categories.forEach(c => {
+        if (c._id === category) catName = c.name
+        const sub = c.subcategories?.find(s => s._id === category)
+        if (sub) catName = sub.name
+      })
+      return catName
     }
     return 'All Products'
   }
@@ -122,9 +157,9 @@ const Products = () => {
             {getPageTitle()}
           </h1>
           <p className="text-lg md:text-xl text-white/90 font-light tracking-wide max-w-2xl">
-            {products.length > 0 
-              ? `Discover ${products.length} ${products.length === 1 ? 'product' : 'products'} in our collection`
-              : 'Explore our curated selection of premium fashion'}
+            {pagination.totalProducts > 0 
+              ? `Showing ${(pagination.currentPage - 1) * 8 + 1}–${Math.min(pagination.currentPage * 8, pagination.totalProducts)} of ${pagination.totalProducts} gemstones`
+              : 'Explore our curated selection of premium gemstones'}
           </p>
         </div>
       </section>
@@ -188,34 +223,65 @@ const Products = () => {
             )}
           </div>
 
-          {/* Category Filters */}
+          {/* Category Filters - Dual Tier Optimized Scroll */}
           {categories.length > 0 && (
             <div className="mt-6 pt-6 border-t border-black/5">
-              <div className="flex items-center gap-4 flex-wrap">
-                <span className="text-xs tracking-widest uppercase font-light text-black/60">Categories:</span>
-                <button
-                  onClick={() => handleCategoryFilter(null)}
-                  className={`text-xs px-4 py-2 border transition-all duration-300 font-light tracking-wide ${
-                    !selectedCategory
-                      ? 'border-black text-black bg-black/5'
-                      : 'border-black/20 text-black/60 hover:border-black hover:text-black'
-                  }`}
-                >
-                  All
-                </button>
-                {categories.map(cat => (
-                  <button
-                    key={cat._id}
-                    onClick={() => handleCategoryFilter(cat._id)}
-                    className={`text-xs px-4 py-2 border transition-all duration-300 font-light tracking-wide ${
-                      selectedCategory === cat._id
-                        ? 'border-black text-black bg-black/5'
-                        : 'border-black/20 text-black/60 hover:border-black hover:text-black'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
+              <div className="flex flex-col gap-6">
+                {/* Tier 1: Main Categories */}
+                <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <span className="text-xs tracking-widest uppercase font-light text-black/60 shrink-0">
+                    Vault:
+                  </span>
+                  <div className="flex items-center gap-3 overflow-x-auto pb-2 md:pb-0 hide-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
+                    <button
+                      onClick={() => handleMainCategoryClick(null)}
+                      className={`text-[10px] md:text-xs px-5 py-2.5 border transition-all duration-300 font-light tracking-widest uppercase whitespace-nowrap shrink-0 ${
+                        !expandedCategory
+                          ? 'border-black text-black bg-black/5'
+                          : 'border-black/20 text-black/60 hover:border-black hover:text-black'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {categories.map(cat => (
+                      <button
+                        key={cat._id}
+                        onClick={() => handleMainCategoryClick(cat._id)}
+                        className={`text-[10px] md:text-xs px-5 py-2.5 border transition-all duration-300 font-light tracking-widest uppercase whitespace-nowrap shrink-0 ${
+                          expandedCategory === cat._id
+                            ? 'border-black text-black bg-black/5'
+                            : 'border-black/20 text-black/60 hover:border-black hover:text-black'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tier 2: Sub-categories (Conditional) */}
+                {expandedCategory && categories.find(c => c._id === expandedCategory)?.subcategories?.length > 0 && (
+                  <div className="flex flex-col md:flex-row md:items-center gap-4 animate-fade-in">
+                    <span className="text-[10px] tracking-widest uppercase font-light text-black/40 shrink-0">
+                      Refine:
+                    </span>
+                    <div className="flex items-center gap-3 overflow-x-auto pb-2 md:pb-0 hide-scrollbar -mx-6 px-6 md:mx-0 md:px-0">
+                      {categories.find(c => c._id === expandedCategory).subcategories.map(sub => (
+                        <button
+                          key={sub._id}
+                          onClick={() => handleSubCategoryClick(sub._id)}
+                          className={`text-[10px] md:text-xs px-4 py-2 border-b transition-all duration-300 font-light tracking-widest uppercase whitespace-nowrap shrink-0 ${
+                            selectedCategory === sub._id
+                              ? 'border-black text-black'
+                              : 'border-transparent text-black/40 hover:text-black hover:border-black/20'
+                          }`}
+                        >
+                          {sub.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -248,6 +314,46 @@ const Products = () => {
                 className="text-sm px-6 py-3 border border-black/20 text-black hover:bg-black hover:text-white transition-all duration-300 font-light tracking-wide uppercase"
               >
                 View All Products
+              </button>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {pagination.totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-20">
+              <button
+                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1}
+                className="w-10 h-10 flex items-center justify-center border border-black/10 text-black hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              
+              {/* Page Numbers */}
+              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(p => (
+                <button
+                  key={p}
+                  onClick={() => handlePageChange(p)}
+                  className={`w-10 h-10 flex items-center justify-center border transition-all duration-300 text-sm font-light ${
+                    pagination.currentPage === p
+                      ? 'border-black bg-black text-white'
+                      : 'border-black/10 text-black hover:border-black'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+
+              <button
+                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === pagination.totalPages}
+                className="w-10 h-10 flex items-center justify-center border border-black/10 text-black hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-20 disabled:cursor-not-allowed"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           )}

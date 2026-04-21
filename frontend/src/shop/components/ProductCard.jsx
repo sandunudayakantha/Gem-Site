@@ -15,11 +15,6 @@ const ProductCard = ({ product }) => {
           New
         </span>
       )}
-      {product.stock === 0 && product.stock !== null && (
-        <span className="absolute top-4 left-4 bg-red-500/90 text-[10px] tracking-widest uppercase py-1.5 px-3 rounded-full text-white backdrop-blur-sm z-10">
-          Out of Stock
-        </span>
-      )}
       {product.featured && (
         <span className="absolute top-4 right-4 bg-white text-black text-xs px-3 py-1.5 tracking-widest uppercase font-light z-10 border border-black/10">
           Featured
@@ -39,7 +34,7 @@ const ProductCard = ({ product }) => {
         </div>
       </Link>
 
-      <div className="pt-6 pb-4">
+      <div className="pt-6 pb-4 text-center">
         {product.weight && (
           <div className="text-[10px] tracking-[0.2em] uppercase font-light text-black/40 mb-2">
             {product.weight} ct
@@ -52,9 +47,9 @@ const ProductCard = ({ product }) => {
         </Link>
         
           {price && (
-            <div className="flex flex-col">
+            <div className="flex flex-col items-center">
               {hasDiscount ? (
-                <div className="flex items-baseline gap-2">
+                <div className="flex items-baseline justify-center gap-2">
                   <span className="text-base font-light text-black tracking-wide">
                     ${Number(price).toFixed(2)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
                   </span>

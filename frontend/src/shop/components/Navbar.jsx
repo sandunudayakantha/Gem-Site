@@ -81,7 +81,7 @@ const Navbar = () => {
               {/* Mega Menu Dropdown */}
               {isCategoriesOpen && (
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-0 w-screen max-w-6xl z-50">
-                  <div className="bg-white/95 backdrop-blur-2xl border border-white/10 shadow-2xl animate-fade-in px-12 py-12">
+                  <div className="bg-white/95 backdrop-blur-2xl border border-white/10 shadow-2xl animate-fade-in px-12 py-12 max-h-[80vh] overflow-y-auto hide-scrollbar">
                     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                       {categories.map((category) => (
                         <div
@@ -169,67 +169,101 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="md:hidden transition-colors duration-300 text-black"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t transition-all duration-300 bg-white/95 backdrop-blur-md border-black/10">
-            <Link
-              to="/"
-              className="block py-2 transition-colors text-black hover:text-black/70"
-            >
-              Home
-            </Link>
-            <Link
-              to="/products"
-              className="block py-2 transition-colors text-black hover:text-black/70"
-            >
-              All Products
-            </Link>
-            {categories.map(category => (
-              <div key={category._id} className="py-2">
-                <Link
-                  to={`/products?category=${category._id}`}
-                  className="block transition-colors font-medium text-black hover:text-black/70"
-                >
-                  {category.name}
-                </Link>
-                {category.subcategories && category.subcategories.length > 0 && (
-                  <div className="ml-4 mt-1">
-                    {category.subcategories.map(sub => (
-                      <Link
-                        key={sub._id}
-                        to={`/products?category=${sub._id}`}
-                        className="block text-sm py-1 transition-colors text-black/70 hover:text-black"
-                      >
-                        {sub.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-            <Link
-              to="/contact"
-              className="block py-2 transition-colors text-black hover:text-black/70"
-            >
-              Contact
-            </Link>
+          {/* Mobile Navigation Controls */}
+          <div className="flex md:hidden items-center gap-6">
             <Link
               to="/cart"
-              className="block py-2 transition-colors text-black hover:text-black/70"
+              className="relative transition-colors duration-300 text-black/80 hover:text-black"
+              onClick={() => setIsMenuOpen(false)}
             >
-              Cart ({getCartCount()})
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              {getCartCount() > 0 && (
+                <span className="absolute -top-2 -right-2 text-[10px] rounded-full h-4.5 w-4.5 flex items-center justify-center transition-colors duration-300 bg-black text-white">
+                  {getCartCount()}
+                </span>
+              )}
             </Link>
+
+            <button
+              className="transition-colors duration-300 text-black"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu - Synchronized with Desktop Aesthetic */}
+        {isMenuOpen && (
+          <div className="md:hidden py-8 border-t transition-all duration-300 bg-white/95 backdrop-blur-2xl border-black/5 max-h-[calc(100vh-80px)] overflow-y-auto hide-scrollbar px-6 shadow-2xl">
+            <div className="space-y-6">
+              <Link
+                to="/"
+                className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                to="/products"
+                className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                All Products
+              </Link>
+              
+              <div className="pt-4 border-t border-black/5">
+                <span className="block text-[10px] tracking-[0.2em] uppercase font-light text-black/40 mb-6">
+                  Experience the Collection
+                </span>
+                {categories.map(category => (
+                  <div key={category._id} className="mb-8 last:mb-0">
+                    <Link
+                      to={`/products?category=${category._id}`}
+                      className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors mb-3"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {category.name}
+                    </Link>
+                    {category.subcategories && category.subcategories.length > 0 && (
+                      <div className="ml-4 space-y-3">
+                        {category.subcategories.map(sub => (
+                          <Link
+                            key={sub._id}
+                            to={`/products?category=${sub._id}`}
+                            className="block text-xs tracking-wider font-light text-black/60 hover:text-black transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-black/5 space-y-6">
+                <Link
+                  to="/contact"
+                  className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Contact
+                </Link>
+                <Link
+                  to="/cart"
+                  className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Cart ({getCartCount()})
+                </Link>
+              </div>
+            </div>
           </div>
         )}
       </div>

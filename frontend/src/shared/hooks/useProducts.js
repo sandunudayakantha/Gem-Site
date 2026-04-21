@@ -4,6 +4,11 @@ import toast from 'react-hot-toast'
 
 export const useProducts = (filters = {}) => {
   const [products, setProducts] = useState([])
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalProducts: 0
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -24,14 +29,29 @@ export const useProducts = (filters = {}) => {
       })
 
       const response = await api.get(`/products?${params.toString()}`)
-      setProducts(response.data)
+      
+      // Handle both structured response and legacy array (for safety)
+      if (response.data && response.data.products) {
+        setProducts(response.data.products)
+        setPagination({
+          currentPage: response.data.currentPage,
+          totalPages: response.data.totalPages,
+          totalProducts: response.data.totalProducts
+        })
+      } else {
+        setProducts(response.data || [])
+        setPagination({
+          currentPage: 1,
+          totalPages: 1,
+          totalProducts: Array.isArray(response.data) ? response.data.length : 0
+        })
+      }
     } catch (err) {
       console.error('Error fetching products:', err)
       setError(err.message)
       
       // Only show toast for network errors once
       if (err.code === 'ERR_NETWORK' || err.message === 'Network Error') {
-        // Check if we've already shown the error
         const hasShownError = sessionStorage.getItem('networkErrorShown')
         if (!hasShownError) {
           toast.error('Cannot connect to server. Make sure the backend is running on port 5007', {
@@ -47,7 +67,13 @@ export const useProducts = (filters = {}) => {
     }
   }
 
-  return { products, loading, error, refetch: fetchProducts }
+  return { 
+    products, 
+    pagination,
+    loading, 
+    error, 
+    refetch: fetchProducts 
+  }
 }
 
 export default useProducts

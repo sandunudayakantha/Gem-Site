@@ -68,15 +68,20 @@ export const getProducts = async (req, res) => {
       });
     }
 
-    if (andConditions.length > 0) {
-      where[Op.and] = andConditions;
-    }
+    const page = req.query.page ? parseInt(req.query.page) : 1;
+    const limit = req.query.limit ? parseInt(req.query.limit) : 12;
+    const offset = (page - 1) * limit;
 
-    const products = await Product.findAll({
+    const { count, rows: products } = await Product.findAndCountAll({
       where,
       include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }],
-      order: [['createdAt', 'DESC']]
+      order: [['createdAt', 'DESC']],
+      limit,
+      offset,
+      distinct: true
     });
+
+    const totalPages = Math.ceil(count / limit);
 
     // Apply special offer if enabled
     const settings = await StoreSettings.getSettings();
@@ -90,7 +95,12 @@ export const getProducts = async (req, res) => {
       return product;
     });
 
-    res.json(result);
+    res.json({
+      products: result,
+      currentPage: page,
+      totalPages,
+      totalProducts: count
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

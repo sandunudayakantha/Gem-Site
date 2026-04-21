@@ -82,7 +82,7 @@ app.get('/api/health', (req, res) => {
 // Sync database and start server
 const PORT = process.env.PORT || 5007;
 
-db.sequelize.sync({ alter: true })
+db.sequelize.sync()
   .then(() => {
     console.log('✅ Connected to MySQL and tables synced');
     app.listen(PORT, () => {

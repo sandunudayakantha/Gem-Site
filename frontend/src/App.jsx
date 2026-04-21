@@ -8,7 +8,6 @@ import ConnectionStatus from './shop/components/ConnectionStatus'
 // Shop Components
 import Navbar from './shop/components/Navbar'
 import Footer from './shop/components/Footer'
-import FloatingButtons from './shop/components/FloatingButtons'
 
 // Shop Pages
 import Home from './shop/pages/Home'
@@ -86,7 +85,6 @@ function App() {
                     <Route path="/contact" element={<Contact />} />
                   </Routes>
                   <Footer />
-                  <FloatingButtons />
                 </>
               }
             />
@@ -118,6 +116,7 @@ function App() {
                         <Route path="colors/edit/:id" element={<ColorForm />} />
                         <Route path="orders" element={<Orders />} />
                         <Route path="cuts" element={<Cuts />} />
+                        <Route path="cuts/new" element={<CutForm />} />
                         <Route path="cuts/edit/:id" element={<CutForm />} />
                         <Route path="gem-colors" element={<GemColors />} />
                         <Route path="gem-colors/new" element={<GemColorForm />} />

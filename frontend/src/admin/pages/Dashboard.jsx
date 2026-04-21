@@ -45,7 +45,7 @@ const Dashboard = () => {
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-gray-600 text-sm font-semibold mb-2">Total Revenue</h3>
-          <p className="text-3xl font-bold text-accent">${(stats?.totalRevenue || 0).toFixed(2)}</p>
+          <p className="text-3xl font-bold text-accent">${Number(stats?.totalRevenue || 0).toFixed(2)}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-gray-600 text-sm font-semibold mb-2">Pending Orders</h3>
@@ -99,7 +99,7 @@ const Dashboard = () => {
                   <tr key={order._id} className="border-b border-gray-100">
                     <td className="py-3 px-4 text-gray-700">{order.orderNumber}</td>
                     <td className="py-3 px-4 text-gray-700">{order.customer.name}</td>
-                    <td className="py-3 px-4 text-gray-700 font-semibold">${order.totalAmount.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-gray-700 font-semibold">${Number(order.totalAmount || 0).toFixed(2)}</td>
                     <td className="py-3 px-4">
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${
                         order.status === 'Delivered' ? 'bg-green-100 text-green-800' :

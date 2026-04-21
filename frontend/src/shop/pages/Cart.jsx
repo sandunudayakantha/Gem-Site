@@ -4,7 +4,8 @@ import { useCart } from '../../shared/context/CartContext'
 import { getImageUrl } from '../../shared/config/api'
 import api from '../../shared/config/api'
 import toast from 'react-hot-toast'
-import ourCollectionBg from '../../shared/images/our-collection.jpg'
+import cartBg from '../../shared/images/cart-back.jpg'
+import cartUpperBg from '../../shared/images/cart-upper.jpeg'
 
 const Cart = () => {
   const { cart, removeFromCart, updateCartQuantity, getCartTotal } = useCart()
@@ -70,18 +71,6 @@ const Cart = () => {
       removeFromCart(productId, size, color)
       toast.success('Item removed from cart')
     } else {
-      // Find the item to check stock
-      const item = cart.find(
-        item => item.product === productId && item.size === size && item.color === color
-      )
-      
-      if (item && item.productData?.stock !== undefined) {
-        if (newQuantity > item.productData.stock) {
-          toast.error(`Only ${item.productData.stock} items available`)
-          updateCartQuantity(productId, size, color, item.productData.stock)
-          return
-        }
-      }
       
       updateCartQuantity(productId, size, color, newQuantity)
     }
@@ -89,10 +78,15 @@ const Cart = () => {
 
   if (cart.length === 0) {
     return (
-      <div className="w-full">
+      <div className="w-full pt-20">
         {/* Hero Header Section */}
-        <section className="bg-black text-white py-16 md:py-24">
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
+        <section className="relative bg-black text-white py-16 md:py-24 overflow-hidden">
+          <div 
+            className="absolute inset-0 z-0 bg-cover bg-center opacity-60"
+            style={{ backgroundImage: `url(${cartUpperBg})` }}
+          ></div>
+          <div className="absolute inset-0 z-10 bg-black/40"></div>
+          <div className="relative z-20 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-light tracking-tight mb-4 animate-fade-in">
               Your Cart is Empty
             </h1>
@@ -106,7 +100,7 @@ const Cart = () => {
         <section className="relative py-24 md:py-32 overflow-hidden">
           <div 
             className="absolute inset-0 z-0 bg-cover bg-fixed bg-center opacity-10"
-            style={{ backgroundImage: `url(${ourCollectionBg})` }}
+            style={{ backgroundImage: `url(${cartBg})` }}
           ></div>
           <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
             <Link
@@ -122,10 +116,15 @@ const Cart = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full pt-20">
       {/* Hero Header Section */}
-      <section className="bg-black text-white py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+      <section className="relative bg-black text-white py-16 md:py-24 overflow-hidden">
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center opacity-60"
+          style={{ backgroundImage: `url(${cartUpperBg})` }}
+        ></div>
+        <div className="absolute inset-0 z-10 bg-black/40"></div>
+        <div className="relative z-20 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-light tracking-tight mb-2 animate-fade-in">
             Shopping Cart
           </h1>
@@ -139,7 +138,7 @@ const Cart = () => {
       <section className="relative py-16 md:py-24 overflow-hidden">
         <div 
           className="absolute inset-0 z-0 bg-cover bg-fixed bg-center opacity-10"
-          style={{ backgroundImage: `url(${ourCollectionBg})` }}
+          style={{ backgroundImage: `url(${cartBg})` }}
         ></div>
         <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 md:gap-24">

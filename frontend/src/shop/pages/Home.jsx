@@ -125,11 +125,11 @@ const Home = () => {
   const fetchData = async () => {
     try {
       const [productsRes, settingsRes] = await Promise.all([
-        api.get('/products?limit=12'),
+        api.get('/products?limit=8'),
         api.get('/settings')
       ])
 
-      setProducts(productsRes.data)
+      setProducts(productsRes.data.products || productsRes.data)
       setSettings(settingsRes.data)
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -283,10 +283,21 @@ const Home = () => {
                 <ProductCard key={product._id} product={product} />
               ))}
             </div>
-          ) : (
-            <p className="text-center text-gray-400 py-24 font-light">No products available at the moment</p>
-          )}
-        </div>
+            ) : (
+              <p className="text-center text-gray-400 py-24 font-light">No products available at the moment</p>
+            )}
+
+            {products.length > 0 && (
+              <div className="mt-20 text-center">
+                <Link
+                  to="/products"
+                  className="inline-block border-2 border-black text-black px-12 py-4 text-sm tracking-widest uppercase font-light hover:bg-black hover:text-white transition-all duration-300"
+                >
+                  Explore All
+                </Link>
+              </div>
+            )}
+          </div>
       </section>
     </div>
   )

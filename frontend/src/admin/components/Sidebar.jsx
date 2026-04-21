@@ -26,12 +26,12 @@ const Sidebar = () => {
         <p className="text-xs text-gray-400 mt-1 uppercase tracking-tighter">Admin Panel</p>
       </div>
       <nav className="p-4">
-        <ul className="space-y-2">
+        <ul className="space-y-1">
           {menuItems.map(item => (
             <li key={item.path}>
               <Link
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                className={`flex items-center gap-3 px-4 py-1.5 rounded-lg transition ${
                   location.pathname === item.path
                     ? 'bg-accent text-white'
                     : 'text-gray-700 hover:bg-gray-100'
@@ -50,7 +50,7 @@ const Sidebar = () => {
             localStorage.removeItem('admin_token')
             window.location.href = '/login'
           }}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition"
+          className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition"
         >
           <span className="text-xl">🚪</span>
           <span className="font-medium">Logout</span>

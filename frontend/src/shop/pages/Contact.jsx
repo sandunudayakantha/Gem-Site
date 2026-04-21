@@ -197,7 +197,7 @@ const Contact = () => {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-6 py-3 border border-black/20 bg-white/5 backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                    className="w-full px-6 py-3 border border-black/20 bg-transparent backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                     placeholder="Your name"
                   />
                 </div>
@@ -212,7 +212,7 @@ const Contact = () => {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-6 py-3 border border-black/20 bg-white/5 backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                    className="w-full px-6 py-3 border border-black/20 bg-transparent backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                     placeholder="your.email@example.com"
                   />
                 </div>
@@ -226,7 +226,7 @@ const Contact = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full px-6 py-3 border border-black/20 bg-white/5 backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                    className="w-full px-6 py-3 border border-black/20 bg-transparent backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                     placeholder="+1234567890"
                   />
                 </div>

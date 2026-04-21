@@ -24,16 +24,6 @@ export const createOrder = async (req, res) => {
         return res.status(404).json({ message: `Product ${item.product} not found` });
       }
 
-      // Validate stock availability
-      if (product.stock === 0) {
-        return res.status(400).json({ message: `Product "${product.title}" is out of stock` });
-      }
-
-      if (item.quantity > product.stock) {
-        return res.status(400).json({ 
-          message: `Only ${product.stock} units available for "${product.title}". You requested ${item.quantity}.` 
-        });
-      }
 
       const price = parseFloat(product.discountPrice || product.price);
       const itemTotal = price * item.quantity;

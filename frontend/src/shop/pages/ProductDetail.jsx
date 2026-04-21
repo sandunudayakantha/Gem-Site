@@ -5,6 +5,8 @@ import api, { getImageUrl } from '../../shared/config/api'
 import { useCart } from '../../shared/context/CartContext'
 import Loading from '../components/Loading'
 import DirectOrderModal from '../components/DirectOrderModal'
+import ourCollectionBg from '../../shared/images/our-collection.jpg'
+import productHeroBg from '../../shared/images/prod-detaill-back.jpeg'
 
 const ProductDetail = () => {
   const { id } = useParams()
@@ -17,7 +19,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [showDirectOrder, setShowDirectOrder] = useState(false)
-  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
+  const { cart, addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
 
   useEffect(() => {
     fetchColors()
@@ -141,11 +143,18 @@ const ProductDetail = () => {
   const hasDiscount = product.discountPrice && product.discountPrice < product.price
 
   return (
-    <div className="w-full">
+    <div className="w-full pt-20">
       {/* Hero Header Section */}
-      <section className="bg-black text-white py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <h1 className="text-3xl md:text-5xl lg:text-6xl font-light tracking-tight mb-4 animate-fade-in">
+      <section className="relative bg-black text-white py-16 md:py-24 overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center opacity-60"
+          style={{ backgroundImage: `url(${productHeroBg})` }}
+        ></div>
+        <div className="absolute inset-0 z-10 bg-black/40"></div>
+        
+        <div className="relative z-20 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <h1 className="text-3xl md:text-5xl lg:text-6xl font-light tracking-tight mb-4 animate-fade-in uppercase">
             {product.title}
           </h1>
           {price && (
@@ -170,8 +179,13 @@ const ProductDetail = () => {
       </section>
 
       {/* Product Content */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+      <section className="relative py-16 md:py-24 overflow-hidden">
+        {/* Background Image with Transparency Overlay */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-fixed bg-center opacity-10"
+          style={{ backgroundImage: `url(${ourCollectionBg})` }}
+        ></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24">
             {/* Product Images */}
             <div>
@@ -275,18 +289,21 @@ const ProductDetail = () => {
                 <div className="flex gap-4">
                   <button
                     onClick={handleAddToCart}
-                    disabled={product.stock === 0}
-                    className="flex-1 border-2 border-black text-black px-8 py-4 text-sm tracking-widest uppercase font-light hover:bg-black hover:text-white transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                    disabled={cart.some(item => item.product === product._id)}
+                    className={`flex-1 border-2 border-black px-8 py-4 text-sm tracking-widest uppercase font-light transition-all duration-300 ${
+                      cart.some(item => item.product === product._id)
+                        ? 'border-gray-200 text-gray-400 cursor-not-allowed bg-gray-50'
+                        : 'text-black hover:bg-black hover:text-white'
+                    }`}
                   >
-                    {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                    {cart.some(item => item.product === product._id) ? 'In Cart' : 'Add to Cart'}
                   </button>
                 </div>
                 <button
                   onClick={handleDirectOrder}
-                  disabled={product.stock === 0}
-                  className="w-full bg-black text-white px-8 py-4 text-sm tracking-widest uppercase font-light hover:bg-black/90 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-full bg-black text-white px-8 py-4 text-sm tracking-widest uppercase font-light hover:bg-black/90 transition-all duration-300"
                 >
-                  {product.stock === 0 ? 'Out of Stock' : 'Order Now'}
+                  Order Now
                 </button>
               </div>
             </div>

@@ -108,24 +108,24 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-down">
         {/* Header */}
-        <div className="bg-black text-white px-8 py-6 flex justify-between items-center">
-          <h2 className="text-2xl md:text-3xl font-light tracking-tight">Direct Order</h2>
+        <div className="bg-black text-white px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl md:text-2xl font-light tracking-tight">Direct Order</h2>
           <button
             onClick={onClose}
             className="text-white/80 hover:text-white transition-colors duration-300"
             aria-label="Close"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="p-8">
+        <div className="p-6">
           {/* Product Summary */}
-          <div className="border border-black/10 p-6 mb-8">
-            <div className="flex gap-6">
-              <div className="w-32 h-32 md:w-40 md:h-40 bg-gray-50 overflow-hidden flex-shrink-0">
+          <div className="border border-black/10 p-4 mb-6">
+            <div className="flex gap-4">
+              <div className="w-20 h-20 md:w-32 md:h-32 bg-gray-50 overflow-hidden flex-shrink-0">
                 <img
                   src={product.images?.[0] ? getImageUrl(product.images[0]) : 'https://via.placeholder.com/160x160?text=No+Image'}
                   alt={product.title}
@@ -136,22 +136,22 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
                 />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg md:text-xl font-light text-black mb-3 tracking-wide">{product.title}</h3>
-                <div className="space-y-2 mb-4">
+                <h3 className="text-sm md:text-lg font-light text-black mb-1 tracking-wide">{product.title}</h3>
+                <div className="space-y-1 mb-2">
                 </div>
-                <p className="text-xl md:text-2xl font-light text-black tracking-wide">${total.toFixed(2)}</p>
+                <p className="text-lg md:text-xl font-light text-black tracking-wide">${total.toFixed(2)}</p>
               </div>
             </div>
           </div>
 
           {/* Order Form */}
-          <div className="mb-8 pb-6 border-b border-black/10">
-            <h3 className="text-xl md:text-2xl font-light tracking-tight text-black mb-6">
+          <div className="mb-6 pb-4 border-b border-black/10">
+            <h3 className="text-lg md:text-xl font-light tracking-tight text-black mb-4">
               Delivery Information
             </h3>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs tracking-widest uppercase font-light text-black/60 mb-3">
+                <label className="block text-[10px] tracking-widest uppercase font-light text-black/60 mb-2">
                   Full Name *
                 </label>
                 <input
@@ -160,13 +160,13 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-6 py-3 border border-black/20 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                  className="w-full px-4 py-2 border border-black/20 bg-transparent backdrop-blur-sm text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                   placeholder="Your full name"
                 />
               </div>
 
               <div>
-                <label className="block text-xs tracking-widest uppercase font-light text-black/60 mb-3">
+                <label className="block text-[10px] tracking-widest uppercase font-light text-black/60 mb-2">
                   Phone Number *
                 </label>
                 <input
@@ -175,13 +175,13 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full px-6 py-3 border border-black/20 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                  className="w-full px-4 py-2 border border-black/20 bg-transparent backdrop-blur-sm text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                   placeholder="+1234567890"
                 />
               </div>
 
               <div>
-                <label className="block text-xs tracking-widest uppercase font-light text-black/60 mb-3">
+                <label className="block text-[10px] tracking-widest uppercase font-light text-black/60 mb-2">
                   Email *
                 </label>
                 <input
@@ -190,13 +190,13 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-6 py-3 border border-black/20 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                  className="w-full px-4 py-2 border border-black/20 bg-transparent backdrop-blur-sm text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                   placeholder="your.email@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-xs tracking-widest uppercase font-light text-black/60 mb-3">
+                <label className="block text-[10px] tracking-widest uppercase font-light text-black/60 mb-2">
                   Delivery Address *
                 </label>
                 <textarea
@@ -204,30 +204,30 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
                   value={formData.address}
                   onChange={handleChange}
                   required
-                  rows="3"
-                  className="w-full px-6 py-3 border border-black/20 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide resize-none"
+                  rows="2"
+                  className="w-full px-4 py-2 border border-black/20 bg-transparent backdrop-blur-sm text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide resize-none"
                   placeholder="Your complete delivery address"
                 />
               </div>
 
-              <div className="bg-gray-50 p-6 border border-black/10">
-                <p className="text-sm font-light tracking-wide text-black text-center italic">
+              <div className="bg-transparent backdrop-blur-md p-4 border border-black/10">
+                <p className="text-xs font-light tracking-wide text-black text-center italic leading-tight">
                   "We will contact you soon for payment and delivery details."
                 </p>
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-4 pt-2">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 border-2 border-black/20 text-black px-8 py-4 text-sm tracking-widest uppercase font-light hover:border-black hover:bg-black hover:text-white transition-all duration-300"
+                  className="flex-1 border-2 border-black/20 text-black px-4 py-3 text-xs tracking-widest uppercase font-light hover:border-black hover:bg-black hover:text-white transition-all duration-300"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-black text-white px-8 py-4 text-sm tracking-widest uppercase font-light hover:bg-black/90 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="flex-1 bg-black text-white px-4 py-3 text-xs tracking-widest uppercase font-light hover:bg-black/90 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Claiming Gem...' : 'Claim This Gem'}
                 </button>

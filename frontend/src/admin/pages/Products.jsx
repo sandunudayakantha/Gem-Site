@@ -14,8 +14,8 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get('/products')
-      setProducts(response.data)
+      const response = await api.get('/products?limit=1000') // Admin usually wants to see all initially, or I could add admin pagination later.
+      setProducts(response.data.products || response.data)
     } catch (error) {
       console.error('Error fetching products:', error)
       toast.error('Failed to fetch products')
