@@ -29,9 +29,17 @@ const Size = sequelize.define('Size', {
   order: {
     type: DataTypes.INTEGER,
     defaultValue: 0
+  },
+  _id: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.id;
+    }
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 export default Size;

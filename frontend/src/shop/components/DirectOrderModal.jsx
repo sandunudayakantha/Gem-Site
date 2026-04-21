@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import api, { getImageUrl } from '../../shared/config/api'
+import ClaimSuccessModal from './ClaimSuccessModal'
 
 const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColor, quantity }) => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
   })
   const [loading, setLoading] = useState(false)
   const [colorsMap, setColorsMap] = useState({})
+  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -54,10 +56,7 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
       return
     }
 
-    if (!selectedSize || !selectedColor) {
-      toast.error('Please select size and color')
-      return
-    }
+    setLoading(true)
 
     setLoading(true)
 
@@ -65,16 +64,15 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
       const orderData = {
         items: [{
           product: product._id,
-          size: selectedSize,
-          color: selectedColor,
-          quantity: quantity
+          size: '',
+          color: '',
+          quantity: 1
         }],
         customer: formData
       }
 
       const response = await api.post('/orders', orderData)
-      toast.success('Order placed successfully!')
-      onClose()
+      setSubmitted(true)
       // Reset form
       setFormData({
         name: '',
@@ -91,11 +89,20 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
     }
   }
 
+  if (submitted) {
+    return <ClaimSuccessModal 
+      isOpen={isOpen} 
+      onClose={() => {
+        setSubmitted(false)
+        onClose()
+      }} 
+    />
+  }
+
   if (!isOpen) return null
 
   const price = product.discountPrice || product.price
   const total = price * quantity
-  const selectedColorInfo = getColorInfo(selectedColor)
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
@@ -131,20 +138,6 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
               <div className="flex-1">
                 <h3 className="text-lg md:text-xl font-light text-black mb-3 tracking-wide">{product.title}</h3>
                 <div className="space-y-2 mb-4">
-                  <p className="text-sm text-black/70 font-light tracking-wide">
-                    Size: <span className="text-black">{selectedSize}</span>
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-black/70 font-light tracking-wide">Color:</span>
-                    <div
-                      className="w-5 h-5 rounded-full border border-black/20"
-                      style={{ backgroundColor: selectedColorInfo.hexCode }}
-                    />
-                    <span className="text-sm text-black font-light">{selectedColorInfo.displayName}</span>
-                  </div>
-                  <p className="text-sm text-black/70 font-light tracking-wide">
-                    Quantity: <span className="text-black">{quantity}</span>
-                  </p>
                 </div>
                 <p className="text-xl md:text-2xl font-light text-black tracking-wide">${total.toFixed(2)}</p>
               </div>
@@ -218,11 +211,8 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
               </div>
 
               <div className="bg-gray-50 p-6 border border-black/10">
-                <p className="text-sm font-light tracking-wide text-black mb-2">
-                  <span className="uppercase tracking-widest text-xs text-black/60">Payment Method:</span> Cash on Delivery
-                </p>
-                <p className="text-xs text-black/50 font-light tracking-wide">
-                  You will pay when you receive your order.
+                <p className="text-sm font-light tracking-wide text-black text-center italic">
+                  "We will contact you soon for payment and delivery details."
                 </p>
               </div>
 
@@ -239,7 +229,7 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
                   disabled={loading}
                   className="flex-1 bg-black text-white px-8 py-4 text-sm tracking-widest uppercase font-light hover:bg-black/90 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Placing Order...' : 'Place Order'}
+                  {loading ? 'Claiming Gem...' : 'Claim This Gem'}
                 </button>
               </div>
             </form>

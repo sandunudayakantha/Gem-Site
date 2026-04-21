@@ -50,9 +50,17 @@ const ContactMessage = sequelize.define('ContactMessage', {
   status: {
     type: DataTypes.ENUM('New', 'Read', 'Replied'),
     defaultValue: 'New'
+  },
+  _id: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.id;
+    }
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 export default ContactMessage;

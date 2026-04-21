@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api, { getImageUrl } from '../../shared/config/api'
 import { useCart } from '../../shared/context/CartContext'
+import ClaimSuccessModal from '../components/ClaimSuccessModal'
 
 const Checkout = () => {
   const navigate = useNavigate()
@@ -16,6 +17,7 @@ const Checkout = () => {
     address: ''
   })
   const [loading, setLoading] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
     fetchColors()
@@ -106,9 +108,8 @@ const Checkout = () => {
       }
 
       const response = await api.post('/orders', orderData)
-      toast.success('Order placed successfully!')
+      setShowSuccess(true)
       clearCart()
-      navigate('/')
     } catch (error) {
       console.error('Error placing order:', error)
       const errorMessage = error.response?.data?.message || error.message || 'Failed to place order. Please try again.'
@@ -116,6 +117,18 @@ const Checkout = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (showSuccess) {
+    return (
+      <ClaimSuccessModal 
+        isOpen={showSuccess} 
+        onClose={() => {
+          setShowSuccess(false)
+          navigate('/')
+        }} 
+      />
+    )
   }
 
   if (cart.length === 0) {
@@ -233,11 +246,8 @@ const Checkout = () => {
                 </div>
 
                 <div className="bg-gray-50 p-6 border border-black/10">
-                  <p className="text-sm font-light tracking-wide text-black mb-2">
-                    <span className="uppercase tracking-widest text-xs text-black/60">Payment Method:</span> Cash on Delivery
-                  </p>
-                  <p className="text-xs text-black/50 font-light tracking-wide">
-                    You will pay when you receive your order.
+                  <p className="text-sm font-light tracking-wide text-black text-center italic">
+                    "We will contact you soon for payment and delivery details."
                   </p>
                 </div>
 
@@ -246,7 +256,7 @@ const Checkout = () => {
                   disabled={loading}
                   className="w-full bg-black text-white px-8 py-4 text-sm tracking-widest uppercase font-light hover:bg-black/90 transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Placing Order...' : 'Place Order'}
+                  {loading ? 'Claiming Gems...' : 'Claim These Gems'}
                 </button>
               </form>
             </div>
@@ -291,7 +301,7 @@ const Checkout = () => {
                           <span>Qty: {item.quantity}</span>
                         </div>
                         <p className="text-base font-light text-black tracking-wide">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ${(Number(item.price) * item.quantity).toFixed(2)}
                         </p>
                       </div>
                     </div>
@@ -300,18 +310,18 @@ const Checkout = () => {
                 <div className="border-t border-black/10 pt-6 space-y-4">
                   <div className="flex justify-between text-black/70 font-light tracking-wide">
                     <span>Subtotal</span>
-                    <span className="text-black">${subtotal.toFixed(2)}</span>
-                  </div>
+                    <span className="text-black">${Number(subtotal).toFixed(2)}</span>
+                   </div>
                   <div className="flex justify-between text-black/70 font-light tracking-wide">
                     <span>Delivery</span>
                     <span className="text-black">
-                      {deliveryFee === 0 ? 'Free' : `$${deliveryFee.toFixed(2)}`}
+                      {deliveryFee === 0 ? 'Free' : `$${Number(deliveryFee).toFixed(2)}`}
                     </span>
                   </div>
                   <div className="border-t border-black/10 pt-4 mt-4">
                     <div className="flex justify-between text-xl font-light tracking-wide text-black">
                       <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
+                      <span>${Number(total).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -320,6 +330,13 @@ const Checkout = () => {
           </div>
         </div>
       </section>
+      <ClaimSuccessModal 
+        isOpen={showSuccess} 
+        onClose={() => {
+          setShowSuccess(false)
+          navigate('/')
+        }} 
+      />
     </div>
   )
 }

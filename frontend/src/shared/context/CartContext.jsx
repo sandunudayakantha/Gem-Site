@@ -43,13 +43,25 @@ export const CartProvider = ({ children }) => {
       throw new Error('Product is out of stock')
     }
 
+    // Check if adding this will exceed stock
+    const existingItemInState = cart.find(
+      item => item.product === product._id && item.size === size && item.color === color
+    )
+
+    if (existingItemInState) {
+      const potentialQuantity = existingItemInState.quantity + quantity
+      if (potentialQuantity > product.stock) {
+        throw new Error(`Only ${product.stock} items available`)
+      }
+    }
+
     const item = {
       product: product._id,
       productData: product,
       size,
       color,
       quantity: parseInt(quantity),
-      price: product.discountPrice || product.price
+      price: Number(product.discountPrice || product.price)
     }
 
     setCart(prevCart => {
@@ -58,13 +70,9 @@ export const CartProvider = ({ children }) => {
       )
 
       if (existingItem) {
-        const newQuantity = existingItem.quantity + quantity
-        if (newQuantity > product.stock) {
-          throw new Error(`Only ${product.stock} items available`)
-        }
         return prevCart.map(item =>
           item.product === product._id && item.size === size && item.color === color
-            ? { ...item, quantity: newQuantity }
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         )
       }

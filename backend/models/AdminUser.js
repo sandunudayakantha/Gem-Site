@@ -37,8 +37,17 @@ const AdminUser = sequelize.define('AdminUser', {
         user.password = await bcrypt.hash(user.password, 10);
       }
     }
-  }
+  },
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
+
+// Virtual _id
+AdminUser.prototype.toJSON = function() {
+  const values = Object.assign({}, this.get());
+  values._id = values.id;
+  return values;
+};
 
 // Compare password method
 AdminUser.prototype.comparePassword = async function(candidatePassword) {

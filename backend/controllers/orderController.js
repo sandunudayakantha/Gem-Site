@@ -45,7 +45,18 @@ export const createOrder = async (req, res) => {
         size: item.size,
         color: item.color,
         quantity: item.quantity,
-        price: price
+        price: price,
+        // Gemstone specific fields for full detail in admin
+        weight: product.weight,
+        dimensions: product.dimensions,
+        cut: product.cut,
+        gemColor: product.gemColor,
+        clarity: product.clarity,
+        treatment: product.treatment,
+        origin: product.origin,
+        certification: product.certification,
+        priceUnit: product.priceUnit,
+        images: product.images
       });
     }
 

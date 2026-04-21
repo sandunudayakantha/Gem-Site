@@ -13,6 +13,11 @@ import authRoutes from './routes/authRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
 import sizeRoutes from './routes/sizeRoutes.js';
 import colorRoutes from './routes/colorRoutes.js';
+import cutRoutes from './routes/cutRoutes.js';
+import gemColorRoutes from './routes/gemColorRoutes.js';
+import clarityRoutes from './routes/clarityRoutes.js';
+import originRoutes from './routes/originRoutes.js';
+import certificationRoutes from './routes/certificationRoutes.js';
 import contactMessageRoutes from './routes/contactMessageRoutes.js';
 
 dotenv.config();
@@ -63,6 +68,11 @@ app.use('/api/auth/admin', authRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/sizes', sizeRoutes);
 app.use('/api/colors', colorRoutes);
+app.use('/api/cuts', cutRoutes);
+app.use('/api/gem-colors', gemColorRoutes);
+app.use('/api/clarities', clarityRoutes);
+app.use('/api/origins', originRoutes);
+app.use('/api/certifications', certificationRoutes);
 app.use('/api/contact-messages', contactMessageRoutes);
 
 app.get('/api/health', (req, res) => {
@@ -72,7 +82,7 @@ app.get('/api/health', (req, res) => {
 // Sync database and start server
 const PORT = process.env.PORT || 5007;
 
-db.sequelize.sync({ alter: process.env.NODE_ENV === 'development' })
+db.sequelize.sync({ alter: true })
   .then(() => {
     console.log('✅ Connected to MySQL and tables synced');
     app.listen(PORT, () => {

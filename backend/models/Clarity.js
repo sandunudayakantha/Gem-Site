@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
 
-const Color = sequelize.define('Color', {
+const Clarity = sequelize.define('Clarity', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -21,16 +21,6 @@ const Color = sequelize.define('Color', {
     allowNull: false,
     trim: true
   },
-  hexCode: {
-    type: DataTypes.STRING,
-    trim: true,
-    defaultValue: '#000000'
-  },
-  categoryId: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    defaultValue: null
-  },
   order: {
     type: DataTypes.INTEGER,
     defaultValue: 0
@@ -47,4 +37,4 @@ const Color = sequelize.define('Color', {
   toObject: { virtuals: true }
 });
 
-export default Color;
+export default Clarity;

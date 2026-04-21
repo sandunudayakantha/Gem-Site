@@ -14,6 +14,11 @@ const ProductForm = () => {
   const [selectedSizes, setSelectedSizes] = useState([])
   const [availableColors, setAvailableColors] = useState([])
   const [selectedColors, setSelectedColors] = useState([])
+  const [availableCuts, setAvailableCuts] = useState([])
+  const [availableGemColors, setAvailableGemColors] = useState([])
+  const [availableClarities, setAvailableClarities] = useState([])
+  const [availableOrigins, setAvailableOrigins] = useState([])
+  const [availableCertifications, setAvailableCertifications] = useState([])
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -26,15 +31,30 @@ const ProductForm = () => {
     stock: '',
     featured: false,
     newArrival: false,
-    freeDelivery: false
+    freeDelivery: false,
+    weight: '',
+    dimensions: '',
+    cut: '',
+    gemColor: '',
+    clarity: '',
+    treatment: '',
+    origin: '',
+    certification: '',
+    priceUnit: 'total'
   })
   const [images, setImages] = useState([])
   const [newImages, setNewImages] = useState([])
+  const [dimensionValues, setDimensionValues] = useState({ length: '', width: '', height: '' })
 
   useEffect(() => {
     fetchCategories()
     fetchSizes()
     fetchColors()
+    fetchCuts()
+    fetchGemColors()
+    fetchClarities()
+    fetchOrigins()
+    fetchCertifications()
     if (id) {
       fetchProduct()
     }
@@ -74,7 +94,7 @@ const ProductForm = () => {
       return
     }
     
-    const selectedCategory = categories.find(cat => cat._id === categoryId)
+    const selectedCategory = categories.find(cat => cat._id == categoryId)
     
     // Check if subcategories exist, are an array, have length > 0, and are populated objects
     if (selectedCategory && 
@@ -143,6 +163,51 @@ const ProductForm = () => {
     }
   }
 
+  const fetchCuts = async () => {
+    try {
+      const response = await api.get('/cuts')
+      setAvailableCuts(response.data)
+    } catch (error) {
+      console.error('Error fetching cuts:', error)
+    }
+  }
+
+  const fetchGemColors = async () => {
+    try {
+      const response = await api.get('/gem-colors')
+      setAvailableGemColors(response.data)
+    } catch (error) {
+      console.error('Error fetching gem colors:', error)
+    }
+  }
+
+  const fetchClarities = async () => {
+    try {
+      const response = await api.get('/clarities')
+      setAvailableClarities(response.data)
+    } catch (error) {
+      console.error('Error fetching clarities:', error)
+    }
+  }
+
+  const fetchOrigins = async () => {
+    try {
+      const response = await api.get('/origins')
+      setAvailableOrigins(response.data)
+    } catch (error) {
+      console.error('Error fetching origins:', error)
+    }
+  }
+
+  const fetchCertifications = async () => {
+    try {
+      const response = await api.get('/certifications')
+      setAvailableCertifications(response.data)
+    } catch (error) {
+      console.error('Error fetching certifications:', error)
+    }
+  }
+
   const fetchProduct = async () => {
     try {
       const response = await api.get(`/products/${id}`)
@@ -165,8 +230,30 @@ const ProductForm = () => {
         stock: product.stock,
         featured: product.featured,
         newArrival: product.newArrival,
-        freeDelivery: product.freeDelivery || false
+        freeDelivery: product.freeDelivery || false,
+        weight: product.weight || '',
+        dimensions: product.dimensions || '',
+        cut: product.cut || '',
+        gemColor: product.gemColor || '',
+        clarity: product.clarity || '',
+        treatment: product.treatment || '',
+        origin: product.origin || '',
+        certification: product.certification || '',
+        priceUnit: product.priceUnit || 'total'
       })
+
+      // Parse dimensions if they exist
+      if (product.dimensions) {
+        const dimMatch = product.dimensions.match(/(\d+\.?\d*)\s*[×x*]\s*(\d+\.?\d*)\s*[×x*]\s*(\d+\.?\d*)/i)
+        if (dimMatch) {
+          setDimensionValues({
+            length: dimMatch[1],
+            width: dimMatch[2],
+            height: dimMatch[3]
+          })
+        }
+      }
+
       setImages(product.images || [])
     } catch (error) {
       console.error('Error fetching product:', error)
@@ -216,6 +303,14 @@ const ProductForm = () => {
     }
   }
 
+  const handleDimensionChange = (e) => {
+    const { name, value } = e.target
+    setDimensionValues({
+      ...dimensionValues,
+      [name]: value
+    })
+  }
+
   const handleImageChange = (e) => {
     setNewImages(Array.from(e.target.files))
   }
@@ -223,15 +318,7 @@ const ProductForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Validate sizes and colors
-    if (selectedSizes.length === 0) {
-      toast.error('Please select at least one size')
-      return
-    }
-    if (selectedColors.length === 0) {
-      toast.error('Please select at least one color')
-      return
-    }
+    // Sizes and colors are now optional
     
     try {
       const submitData = new FormData()
@@ -244,6 +331,12 @@ const ProductForm = () => {
       // Add selected sizes and colors
       submitData.append('sizes', selectedSizes.join(', '))
       submitData.append('colors', selectedColors.join(', '))
+
+      // Format dimensions
+      if (dimensionValues.length || dimensionValues.width || dimensionValues.height) {
+        const formattedDims = `${dimensionValues.length || 0} × ${dimensionValues.width || 0} × ${dimensionValues.height || 0} mm`
+        submitData.append('dimensions', formattedDims)
+      }
 
       newImages.forEach(file => {
         submitData.append('images', file)
@@ -357,148 +450,216 @@ const ProductForm = () => {
 
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Price *
+              Price
             </label>
-            <input
-              type="number"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              required
-              min="0"
-              step="0.01"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
-            />
+            <div className="flex gap-4">
+              <input
+                type="number"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+              <select
+                name="priceUnit"
+                value={formData.priceUnit}
+                onChange={handleChange}
+                className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="total">Total</option>
+                <option value="per_carat">Per Carat</option>
+              </select>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Discount Price
-            </label>
-            <input
-              type="number"
-              name="discountPrice"
-              value={formData.discountPrice}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
+{/* Discount Price and Stock removed */}
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Stock *
-            </label>
-            <input
-              type="number"
-              name="stock"
-              value={formData.stock}
-              onChange={handleChange}
-              required
-              min="0"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
+{/* Sizes and Colors sections removed */}
+        </div>
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Sizes *
-            </label>
-            {availableSizes.length > 0 ? (
-              <div className="border border-gray-300 rounded-lg p-4 max-h-48 overflow-y-auto">
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                  {availableSizes.map(size => (
-                    <label
-                      key={size._id}
-                      className="flex items-center gap-2 p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedSizes.includes(size.name)}
-                        onChange={() => handleSizeToggle(size.name)}
-                        className="w-4 h-4 text-accent focus:ring-accent"
-                      />
-                      <span className="text-sm font-medium text-gray-900">
-                        {size.displayName}
-                      </span>
-                    </label>
-                  ))}
+        {/* Gemstone Specifications Section */}
+        <div className="border-t border-gray-200 pt-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Gemstone Specifications</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Weight (carats)
+              </label>
+              <input
+                type="number"
+                name="weight"
+                value={formData.weight}
+                onChange={handleChange}
+                step="0.001"
+                min="0"
+                placeholder="e.g. 1.25"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Dimensions (L × W × H mm)
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <input
+                    type="number"
+                    name="length"
+                    value={dimensionValues.length}
+                    onChange={handleDimensionChange}
+                    step="0.1"
+                    min="0"
+                    placeholder="L"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+                  />
                 </div>
-                {selectedSizes.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">Please select at least one size</p>
-                )}
-                {selectedSizes.length > 0 && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Selected: {selectedSizes.join(', ')}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                <p className="text-sm text-gray-600 mb-2">
-                  No sizes available. Please create sizes first.
-                </p>
-                <Link
-                  to="/admin/sizes/new"
-                  className="text-accent hover:underline font-semibold text-sm"
-                >
-                  Go to Sizes Management →
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-900 mb-2">
-              Colors *
-            </label>
-            {availableColors.length > 0 ? (
-              <div className="border border-gray-300 rounded-lg p-4 max-h-48 overflow-y-auto">
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                  {availableColors.map(color => (
-                    <label
-                      key={color._id}
-                      className="flex items-center gap-2 p-2 border border-gray-200 rounded hover:bg-gray-50 cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedColors.includes(color.name)}
-                        onChange={() => handleColorToggle(color.name)}
-                        className="w-4 h-4 text-accent focus:ring-accent"
-                      />
-                      <div
-                        className="w-6 h-6 rounded-full border border-gray-300 flex-shrink-0"
-                        style={{ backgroundColor: color.hexCode }}
-                      />
-                      <span className="text-sm font-medium text-gray-900">
-                        {color.displayName}
-                      </span>
-                    </label>
-                  ))}
+                <span className="text-gray-400">×</span>
+                <div className="flex-1 min-w-0">
+                  <input
+                    type="number"
+                    name="width"
+                    value={dimensionValues.width}
+                    onChange={handleDimensionChange}
+                    step="0.1"
+                    min="0"
+                    placeholder="W"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+                  />
                 </div>
-                {selectedColors.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">Please select at least one color</p>
-                )}
-                {selectedColors.length > 0 && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Selected: {selectedColors.join(', ')}
-                  </p>
-                )}
+                <span className="text-gray-400">×</span>
+                <div className="flex-1 min-w-0">
+                  <input
+                    type="number"
+                    name="height"
+                    value={dimensionValues.height}
+                    onChange={handleDimensionChange}
+                    step="0.1"
+                    min="0"
+                    placeholder="H"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent text-sm"
+                  />
+                </div>
+                <span className="text-sm font-medium text-gray-500">mm</span>
               </div>
-            ) : (
-              <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                <p className="text-sm text-gray-600 mb-2">
-                  No colors available. Please create colors first.
-                </p>
-                <Link
-                  to="/admin/colors/new"
-                  className="text-accent hover:underline font-semibold text-sm"
-                >
-                  Go to Colors Management →
-                </Link>
-              </div>
-            )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Cut (Shape + Grade)
+              </label>
+              <select
+                name="cut"
+                value={formData.cut}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">Select Cut</option>
+                {availableCuts.map(cut => (
+                  <option key={cut._id} value={cut.displayName}>
+                    {cut.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Color Detail
+              </label>
+              <select
+                name="gemColor"
+                value={formData.gemColor}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">Select Color Detail</option>
+                {availableGemColors.map(color => (
+                  <option key={color._id} value={color.displayName}>
+                    {color.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Clarity
+              </label>
+              <select
+                name="clarity"
+                value={formData.clarity}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">Select Clarity</option>
+                {availableClarities.map(clarity => (
+                  <option key={clarity._id} value={clarity.displayName}>
+                    {clarity.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Treatment
+              </label>
+              <select
+                name="treatment"
+                value={formData.treatment}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">Select Treatment</option>
+                <option value="Natural">Natural</option>
+                <option value="Heat-treated">Heat-treated</option>
+                <option value="Lab-grown">Lab-grown</option>
+                <option value="Irradiated">Irradiated</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Origin (Optional)
+              </label>
+              <select
+                name="origin"
+                value={formData.origin}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">Select Origin</option>
+                {availableOrigins.map(origin => (
+                  <option key={origin._id} value={origin.displayName}>
+                    {origin.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Certification
+              </label>
+              <select
+                name="certification"
+                value={formData.certification}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value="">Select Certification</option>
+                {availableCertifications.map(cert => (
+                  <option key={cert._id} value={cert.displayName}>
+                    {cert.displayName}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -544,38 +705,6 @@ const ProductForm = () => {
           <p className="text-sm text-gray-500 mt-2">You can select multiple images</p>
         </div>
 
-        <div className="flex gap-4 flex-wrap">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              name="featured"
-              checked={formData.featured}
-              onChange={handleChange}
-              className="w-4 h-4 text-accent focus:ring-accent"
-            />
-            <span className="text-sm font-semibold text-gray-900">Featured Product</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              name="newArrival"
-              checked={formData.newArrival}
-              onChange={handleChange}
-              className="w-4 h-4 text-accent focus:ring-accent"
-            />
-            <span className="text-sm font-semibold text-gray-900">New Arrival</span>
-          </label>
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              name="freeDelivery"
-              checked={formData.freeDelivery}
-              onChange={handleChange}
-              className="w-4 h-4 text-accent focus:ring-accent"
-            />
-            <span className="text-sm font-semibold text-gray-900">Free Delivery</span>
-          </label>
-        </div>
 
         <div className="flex gap-4">
           <button

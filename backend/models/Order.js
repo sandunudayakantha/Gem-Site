@@ -41,9 +41,17 @@ const Order = sequelize.define('Order', {
   status: {
     type: DataTypes.ENUM('Pending', 'Processing', 'Dispatched', 'Delivered'),
     defaultValue: 'Pending'
+  },
+  _id: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.id;
+    }
   }
 }, {
   timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true },
   hooks: {
     beforeValidate: (order) => {
       if (!order.orderNumber || order.orderNumber.trim() === '') {

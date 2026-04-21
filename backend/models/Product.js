@@ -42,7 +42,7 @@ const Product = sequelize.define('Product', {
   },
   price: {
     type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
+    allowNull: true,
     validate: {
       min: 0
     }
@@ -65,6 +65,7 @@ const Product = sequelize.define('Product', {
   },
   stock: {
     type: DataTypes.INTEGER,
+    allowNull: true,
     defaultValue: 0,
     validate: {
       min: 0
@@ -73,9 +74,53 @@ const Product = sequelize.define('Product', {
   freeDelivery: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  weight: {
+    type: DataTypes.DECIMAL(10, 3),
+    allowNull: true
+  },
+  dimensions: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  cut: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  gemColor: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  clarity: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  treatment: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  origin: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  certification: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  priceUnit: {
+    type: DataTypes.STRING,
+    defaultValue: 'total'
+  },
+  _id: {
+    type: DataTypes.VIRTUAL,
+    get() {
+      return this.id;
+    }
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 export default Product;

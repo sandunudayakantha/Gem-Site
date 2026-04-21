@@ -103,7 +103,19 @@ const Contact = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-24">
             {/* Contact Information */}
             <div>
-              <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-12">Get in Touch</h2>
+              <h2 className="text-3xl md:text-4xl font-light tracking-tight text-black mb-6">Get in Touch</h2>
+              <div className="space-y-6 text-sm text-black/70 font-light tracking-wide leading-relaxed mb-12">
+                <p>
+                  Our commitment to excellence extends beyond our curated collections to the exceptional service we provide. 
+                  Whether you are inquiring about the intricate details of a specific piece, seeking guidance on a custom request, 
+                  or requiring detailed assistance with your order, we are here to ensure your experience is nothing short of flawless.
+                </p>
+                <p>
+                  We believe that every interaction is an opportunity to provide the personal attention and expertise you deserve. 
+                  Our specialists are prepared to handle your inquiries with the utmost care, ensuring that your journey with us 
+                  is as seamless and elegant as the items we offer. We value your feedback and look forward to connecting with you.
+                </p>
+              </div>
           
               <div className="space-y-8">
                 {settings?.contact?.phone && (
@@ -185,7 +197,7 @@ const Contact = () => {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-6 py-3 border border-black/20 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                    className="w-full px-6 py-3 border border-black/20 bg-white/5 backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                     placeholder="Your name"
                   />
                 </div>
@@ -200,7 +212,7 @@ const Contact = () => {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-6 py-3 border border-black/20 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                    className="w-full px-6 py-3 border border-black/20 bg-white/5 backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                     placeholder="your.email@example.com"
                   />
                 </div>
@@ -214,7 +226,7 @@ const Contact = () => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full px-6 py-3 border border-black/20 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
+                    className="w-full px-6 py-3 border border-black/20 bg-white/5 backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide"
                     placeholder="+1234567890"
                   />
                 </div>
@@ -229,7 +241,7 @@ const Contact = () => {
                     onChange={handleChange}
                     required
                     rows="6"
-                    className="w-full px-6 py-3 border border-black/20 bg-white text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide resize-none"
+                    className="w-full px-6 py-3 border border-black/20 bg-white/5 backdrop-blur-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors duration-300 font-light tracking-wide resize-none"
                     placeholder="Your message..."
                   />
                 </div>

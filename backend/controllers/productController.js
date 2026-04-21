@@ -136,13 +136,22 @@ export const createProduct = async (req, res) => {
       ...req.body,
       images: images,
       categoryId: parseInt(req.body.category),
-      price: parseFloat(req.body.price),
-      discountPrice: req.body.discountPrice ? parseFloat(req.body.discountPrice) : null,
+      price: (req.body.price && req.body.price !== '') ? parseFloat(req.body.price) : null,
+      discountPrice: (req.body.discountPrice && req.body.discountPrice !== '') ? parseFloat(req.body.discountPrice) : null,
       featured: req.body.featured === 'true' || req.body.featured === true,
       newArrival: req.body.newArrival === 'true' || req.body.newArrival === true,
       sizes: Array.isArray(req.body.sizes) ? req.body.sizes : req.body.sizes?.split(',').map(s => s.trim()) || [],
       colors: Array.isArray(req.body.colors) ? req.body.colors : req.body.colors?.split(',').map(c => c.trim()) || [],
-      stock: parseInt(req.body.stock) || 0
+      stock: (req.body.stock !== undefined && req.body.stock !== '') ? parseInt(req.body.stock) : null,
+      weight: req.body.weight ? parseFloat(req.body.weight) : null,
+      dimensions: req.body.dimensions || null,
+      cut: req.body.cut || null,
+      gemColor: req.body.gemColor || null,
+      clarity: req.body.clarity || null,
+      treatment: req.body.treatment || null,
+      origin: req.body.origin || null,
+      certification: req.body.certification || null,
+      priceUnit: req.body.priceUnit || 'total'
     };
 
     const product = await Product.create(productData);
@@ -174,8 +183,12 @@ export const updateProduct = async (req, res) => {
     }
 
     if (updateData.category) updateData.categoryId = parseInt(updateData.category);
-    if (updateData.price) updateData.price = parseFloat(updateData.price);
-    if (updateData.discountPrice) updateData.discountPrice = parseFloat(updateData.discountPrice);
+    if (updateData.price !== undefined) {
+      updateData.price = (updateData.price && updateData.price !== '') ? parseFloat(updateData.price) : null;
+    }
+    if (updateData.discountPrice !== undefined) {
+      updateData.discountPrice = (updateData.discountPrice && updateData.discountPrice !== '') ? parseFloat(updateData.discountPrice) : null;
+    }
     if (updateData.featured !== undefined) updateData.featured = updateData.featured === 'true' || updateData.featured === true;
     if (updateData.newArrival !== undefined) updateData.newArrival = updateData.newArrival === 'true' || updateData.newArrival === true;
     if (updateData.sizes) {
@@ -184,7 +197,17 @@ export const updateProduct = async (req, res) => {
     if (updateData.colors) {
       updateData.colors = Array.isArray(updateData.colors) ? updateData.colors : updateData.colors.split(',').map(c => c.trim());
     }
-    if (updateData.stock !== undefined) updateData.stock = parseInt(updateData.stock);
+    if (updateData.stock !== undefined) {
+      updateData.stock = (updateData.stock !== undefined && updateData.stock !== '') ? parseInt(updateData.stock) : null;
+    }
+    if (updateData.weight !== undefined) updateData.weight = updateData.weight ? parseFloat(updateData.weight) : null;
+    
+    // String fields will be taken from updateData (...req.body) directly 
+    // but ensured they are null if empty string
+    const stringFields = ['dimensions', 'cut', 'gemColor', 'clarity', 'treatment', 'origin', 'certification', 'priceUnit'];
+    stringFields.forEach(field => {
+      if (updateData[field] === '') updateData[field] = null;
+    });
 
     await productDoc.update(updateData);
     

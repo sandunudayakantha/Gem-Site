@@ -84,7 +84,7 @@ const Orders = () => {
                     <option value="Dispatched">Dispatched</option>
                     <option value="Delivered">Delivered</option>
                   </select>
-                  <p className="text-xl font-bold text-accent">${order.totalAmount.toFixed(2)}</p>
+                  <p className="text-xl font-bold text-accent">${Number(order.totalAmount).toFixed(2)}</p>
                 </div>
               </div>
 
@@ -101,19 +101,51 @@ const Orders = () => {
                   <div className="space-y-2">
                     {order.items.map((item, index) => (
                       <div key={index} className="flex gap-3">
-                        {item.product?.images && (
+                        {item.images && item.images.length > 0 && (
                           <img
-                            src={`http://localhost:5007${item.product.images[0]}`}
+                            src={`http://localhost:5007${item.images[0]}`}
                             alt={item.title}
-                            className="w-16 h-16 object-cover rounded"
+                            className="w-24 h-24 object-cover rounded border border-gray-200"
                           />
                         )}
-                        <div>
-                          <p className="font-semibold text-gray-900">{item.title}</p>
-                          <p className="text-sm text-gray-600">
-                            {item.size} | {item.color} x {item.quantity}
-                          </p>
-                          <p className="text-sm font-semibold text-accent">${item.price.toFixed(2)}</p>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 text-lg mb-1">{item.title}</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 mt-2">
+                            {item.cut && (
+                              <p className="text-xs text-gray-600"><strong>Cut:</strong> {item.cut}</p>
+                            )}
+                            {item.gemColor && (
+                              <p className="text-xs text-gray-600"><strong>Color:</strong> {item.gemColor}</p>
+                            )}
+                            {item.clarity && (
+                              <p className="text-xs text-gray-600"><strong>Clarity:</strong> {item.clarity}</p>
+                            )}
+                            {item.weight && (
+                              <p className="text-xs text-gray-600"><strong>Weight:</strong> {item.weight} ct</p>
+                            )}
+                            {item.origin && (
+                              <p className="text-xs text-gray-600"><strong>Origin:</strong> {item.origin}</p>
+                            )}
+                            {item.certification && (
+                              <p className="text-xs text-gray-600"><strong>Certificate:</strong> {item.certification}</p>
+                            )}
+                            {item.dimensions && (
+                              <p className="text-xs text-gray-600"><strong>Size:</strong> {item.dimensions}</p>
+                            )}
+                            {item.treatment && (
+                              <p className="text-xs text-gray-600"><strong>Treatment:</strong> {item.treatment}</p>
+                            )}
+                          </div>
+                          <div className="mt-3 pt-2 border-t border-gray-50 flex justify-between items-center">
+                            <p className="text-sm font-medium text-accent">
+                              ${Number(item.price).toFixed(2)} {item.priceUnit === 'per_carat' ? '/ ct' : ''} x {item.quantity}
+                            </p>
+                            {item.size || item.color ? (
+                              <p className="text-xs text-gray-400 font-light">
+                                {item.size} {item.size && item.color ? '|' : ''} {item.color}
+                              </p>
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     ))}

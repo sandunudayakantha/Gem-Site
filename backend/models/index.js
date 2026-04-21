@@ -2,8 +2,13 @@ import sequelize from '../config/database.js';
 import AdminUser from './AdminUser.js';
 import Category from './Category.js';
 import Color from './Color.js';
+import Cut from './Cut.js';
+import Clarity from './Clarity.js';
+import Certification from './Certification.js';
 import ContactMessage from './ContactMessage.js';
 import Order from './Order.js';
+import GemColor from './GemColor.js';
+import Origin from './Origin.js';
 import Product from './Product.js';
 import Size from './Size.js';
 import StoreSettings from './StoreSettings.js';
@@ -29,6 +34,11 @@ const db = {
   AdminUser,
   Category,
   Color,
+  Cut,
+  Clarity,
+  Certification,
+  GemColor,
+  Origin,
   ContactMessage,
   Order,
   Product,

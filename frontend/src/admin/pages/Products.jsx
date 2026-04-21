@@ -65,7 +65,6 @@ const Products = () => {
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Title</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Category</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Price</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Stock</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Actions</th>
                 </tr>
               </thead>
@@ -82,26 +81,14 @@ const Products = () => {
                     <td className="py-3 px-4">
                       <div>
                         <p className="font-semibold text-gray-900">{product.title}</p>
-                        {product.featured && (
-                          <span className="text-xs bg-black text-white px-2 py-1 rounded mr-1">Featured</span>
-                        )}
-                        {product.newArrival && (
-                          <span className="text-xs bg-accent text-white px-2 py-1 rounded">New</span>
-                        )}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-gray-700">
                       {product.category?.name || 'N/A'}
                     </td>
                     <td className="py-3 px-4">
-                      <div>
-                        <p className="font-semibold text-gray-900">${(product.discountPrice || product.price).toFixed(2)}</p>
-                        {product.discountPrice && (
-                          <p className="text-sm text-gray-500 line-through">${product.price.toFixed(2)}</p>
-                        )}
-                      </div>
+                      <p className="font-semibold text-gray-900">${Number(product.price).toFixed(2)}</p>
                     </td>
-                    <td className="py-3 px-4 text-gray-700">{product.stock}</td>
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
                         <Link

@@ -4,6 +4,7 @@ import { useCart } from '../../shared/context/CartContext'
 import { getImageUrl } from '../../shared/config/api'
 import api from '../../shared/config/api'
 import toast from 'react-hot-toast'
+import ourCollectionBg from '../../shared/images/our-collection.jpg'
 
 const Cart = () => {
   const { cart, removeFromCart, updateCartQuantity, getCartTotal } = useCart()
@@ -102,8 +103,12 @@ const Cart = () => {
         </section>
 
         {/* Empty Cart Content */}
-        <section className="py-24 md:py-32">
-          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
+        <section className="relative py-24 md:py-32 overflow-hidden">
+          <div 
+            className="absolute inset-0 z-0 bg-cover bg-fixed bg-center opacity-10"
+            style={{ backgroundImage: `url(${ourCollectionBg})` }}
+          ></div>
+          <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
             <Link
               to="/products"
               className="inline-block border-2 border-black text-black px-10 py-4 text-sm tracking-widest uppercase font-light hover:bg-black hover:text-white transition-all duration-300"
@@ -131,8 +136,12 @@ const Cart = () => {
       </section>
 
       {/* Cart Content */}
-      <section className="py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+      <section className="relative py-16 md:py-24 overflow-hidden">
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-fixed bg-center opacity-10"
+          style={{ backgroundImage: `url(${ourCollectionBg})` }}
+        ></div>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 md:gap-24">
             {/* Cart Items */}
             <div className="lg:col-span-2">
@@ -164,70 +173,13 @@ const Cart = () => {
                             {item.productData.title}
                           </h3>
                         </Link>
-                        <div className="flex items-center gap-3 mb-3">
-                          <p className="text-sm text-black/60 font-light tracking-wide">
-                            Size: <span className="text-black">{item.size}</span>
-                          </p>
-                          <span className="text-black/20">|</span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-black/60 font-light tracking-wide">Color:</span>
-                            <div
-                              className="w-5 h-5 rounded-full border border-black/20"
-                              style={{ backgroundColor: getColorInfo(item.color).hexCode }}
-                            />
-                            <span className="text-sm text-black font-light">{getColorInfo(item.color).displayName}</span>
-                          </div>
-                        </div>
-                        {/* Stock Info */}
-                        {item.productData?.stock !== undefined && (
-                          <div className="mb-4">
-                            {item.productData.stock > 0 ? (
-                              <span className={`text-xs font-light tracking-wide ${
-                                item.productData.stock > 10 ? 'text-green-700' : 
-                                item.productData.stock > 5 ? 'text-yellow-700' : 'text-orange-700'
-                              }`}>
-                                {item.productData.stock > 10 
-                                  ? `In Stock (${item.productData.stock} available)` 
-                                  : `Only ${item.productData.stock} left`}
-                              </span>
-                            ) : (
-                              <span className="text-xs font-light tracking-wide text-red-700">Out of Stock</span>
-                            )}
-                          </div>
-                        )}
                         <div className="flex items-center justify-between mt-6">
                           <div>
                             <p className="text-xl md:text-2xl font-light text-black tracking-wide">
-                              ${item.price.toFixed(2)}
+                              ${Number(item.price).toFixed(2)}
                             </p>
                           </div>
                           <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-4">
-                              <button
-                                onClick={() =>
-                                  handleQuantityChange(item.product, item.size, item.color, item.quantity - 1)
-                                }
-                                className="w-12 h-12 border border-black/20 hover:border-black transition-all duration-300 flex items-center justify-center font-light text-lg"
-                              >
-                                −
-                              </button>
-                              <span className="text-lg font-light tracking-wide w-8 text-center">{item.quantity}</span>
-                              <button
-                                onClick={() => {
-                                  const maxQuantity = item.productData?.stock || Infinity
-                                  const newQuantity = Math.min(item.quantity + 1, maxQuantity)
-                                  if (newQuantity > item.quantity) {
-                                    handleQuantityChange(item.product, item.size, item.color, newQuantity)
-                                  } else if (item.quantity >= maxQuantity) {
-                                    toast.error(`Only ${maxQuantity} items available`)
-                                  }
-                                }}
-                                disabled={item.productData?.stock !== undefined && item.quantity >= item.productData.stock}
-                                className="w-12 h-12 border border-black/20 hover:border-black transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center font-light text-lg"
-                              >
-                                +
-                              </button>
-                            </div>
                             <button
                               onClick={() => {
                                 removeFromCart(item.product, item.size, item.color)
@@ -258,27 +210,33 @@ const Cart = () => {
                 <div className="space-y-4 mb-8">
                   <div className="flex justify-between text-black/70 font-light tracking-wide">
                     <span>Subtotal</span>
-                    <span className="text-black">${subtotal.toFixed(2)}</span>
+                    <span className="text-black">${Number(subtotal).toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-black/70 font-light tracking-wide">
                     <span>Delivery</span>
                     <span className="text-black">
-                      {deliveryFee === 0 ? 'Free' : `$${deliveryFee.toFixed(2)}`}
+                      {deliveryFee === 0 ? 'Free' : `$${Number(deliveryFee).toFixed(2)}`}
                     </span>
                   </div>
                   <div className="border-t border-black/10 pt-4 mt-4">
                     <div className="flex justify-between text-xl font-light tracking-wide text-black">
                       <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
+                      <span>${Number(total).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
                 <Link
                   to="/checkout"
-                  className="block w-full bg-black text-white text-center px-8 py-4 text-sm tracking-widest uppercase font-light hover:bg-black/90 transition-all duration-300 mb-4"
+                  className="block w-full bg-black text-white text-center px-8 py-4 text-sm tracking-widest uppercase font-light hover:bg-black/90 transition-all duration-300 mb-6"
                 >
                   Proceed to Checkout
                 </Link>
+
+                <div className="bg-gray-50 p-4 border border-black/5 mb-6">
+                  <p className="text-xs font-light tracking-wide text-black/60 text-center italic leading-relaxed">
+                    "We will contact you soon for payment and delivery details after you proceed."
+                  </p>
+                </div>
                 <Link
                   to="/products"
                   className="block w-full text-center text-sm tracking-widest uppercase font-light text-black/60 hover:text-black transition-colors duration-300"
