@@ -25,6 +25,10 @@ const Certification = sequelize.define('Certification', {
     type: DataTypes.INTEGER,
     defaultValue: 0
   },
+  image: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   _id: {
     type: DataTypes.VIRTUAL,
     get() {

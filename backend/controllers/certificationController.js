@@ -1,4 +1,5 @@
 import db from '../models/index.js';
+import { processUpload } from '../utils/imageProcessor.js';
 
 const Certification = db.Certification;
 
@@ -28,7 +29,11 @@ export const getCertificationById = async (req, res) => {
 
 export const createCertification = async (req, res) => {
   try {
-    const certification = await Certification.create(req.body);
+    const data = { ...req.body };
+    if (req.file) {
+      data.image = await processUpload(req.file);
+    }
+    const certification = await Certification.create(data);
     res.status(201).json(certification);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -44,7 +49,11 @@ export const updateCertification = async (req, res) => {
     if (!certification) {
       return res.status(404).json({ message: 'Certification not found' });
     }
-    await certification.update(req.body);
+    const data = { ...req.body };
+    if (req.file) {
+      data.image = await processUpload(req.file);
+    }
+    await certification.update(data);
     res.json(certification);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {

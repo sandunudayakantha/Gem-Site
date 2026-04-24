@@ -1,6 +1,7 @@
 import { Op } from 'sequelize';
 import Category from '../models/Category.js';
 import Product from '../models/Product.js';
+import { processUpload } from '../utils/imageProcessor.js';
 
 // Get all categories with subcategories
 export const getCategories = async (req, res) => {
@@ -85,7 +86,7 @@ export const createCategory = async (req, res) => {
       name,
       slug,
       parentId: normalizedParentId,
-      image: req.file ? `/uploads/${req.file.filename}` : image || null
+      image: req.file ? await processUpload(req.file) : image || null
     };
 
     if (normalizedParentId) {
@@ -151,7 +152,7 @@ export const updateCategory = async (req, res) => {
     }
 
     if (req.file) {
-      updateData.image = `/uploads/${req.file.filename}`;
+      updateData.image = await processUpload(req.file);
     }
 
     if (req.body.parent !== undefined) {

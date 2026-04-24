@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import api from '../../shared/config/api'
+import api, { getImageUrl } from '../../shared/config/api'
 import Loading from '../components/Loading'
 
 const Certifications = () => {
@@ -61,6 +61,7 @@ const Certifications = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">Image</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Name</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Display Name</th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">Order</th>
@@ -70,6 +71,19 @@ const Certifications = () => {
               <tbody>
                 {certifications.map(cert => (
                   <tr key={cert._id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-3 px-4 text-gray-900">
+                      {cert.image ? (
+                        <img 
+                          src={getImageUrl(cert.image)} 
+                          alt={cert.displayName} 
+                          className="h-10 w-10 object-contain border border-gray-100 rounded bg-white"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 bg-gray-100 rounded flex items-center justify-center text-[10px] text-gray-400">
+                          No Img
+                        </div>
+                      )}
+                    </td>
                     <td className="py-3 px-4 font-semibold text-gray-900">{cert.name}</td>
                     <td className="py-3 px-4 text-gray-700">{cert.displayName}</td>
                     <td className="py-3 px-4 text-gray-700">{cert.order}</td>

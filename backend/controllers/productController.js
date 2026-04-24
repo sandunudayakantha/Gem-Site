@@ -2,6 +2,7 @@ import { Op } from 'sequelize';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import StoreSettings from '../models/StoreSettings.js';
+import { processUpload } from '../utils/imageProcessor.js';
 
 // Get all products
 export const getProducts = async (req, res) => {
@@ -74,7 +75,7 @@ export const getProducts = async (req, res) => {
 
     const { count, rows: products } = await Product.findAndCountAll({
       where,
-      include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }],
+      include: [{ model: Category, as: 'category', attributes: ['id', 'name', 'slug'] }],
       order: [['createdAt', 'DESC']],
       limit,
       offset,
@@ -110,7 +111,9 @@ export const getProducts = async (req, res) => {
 export const getProduct = async (req, res) => {
   try {
     const productDoc = await Product.findByPk(req.params.id, {
-      include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }]
+      include: [
+        { model: Category, as: 'category', attributes: ['id', 'name', 'slug'] }
+      ]
     });
 
     if (!productDoc) {
@@ -136,7 +139,13 @@ export const getProduct = async (req, res) => {
 // Create product (Admin only)
 export const createProduct = async (req, res) => {
   try {
-    const images = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+    const images = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const optimizedPath = await processUpload(file);
+        images.push(optimizedPath);
+      }
+    }
     
     if (images.length === 0) {
       return res.status(400).json({ message: 'At least one image is required' });
@@ -167,7 +176,7 @@ export const createProduct = async (req, res) => {
     const product = await Product.create(productData);
     
     const freshProduct = await Product.findByPk(product.id, {
-      include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }]
+      include: [{ model: Category, as: 'category', attributes: ['id', 'name', 'slug'] }]
     });
     
     res.status(201).json(freshProduct);
@@ -188,7 +197,11 @@ export const updateProduct = async (req, res) => {
     const updateData = { ...req.body };
     
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => `/uploads/${file.filename}`);
+      const newImages = [];
+      for (const file of req.files) {
+        const optimizedPath = await processUpload(file);
+        newImages.push(optimizedPath);
+      }
       updateData.images = [...(productDoc.images || []), ...newImages];
     }
 

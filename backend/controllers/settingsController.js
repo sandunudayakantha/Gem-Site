@@ -4,6 +4,7 @@ import ContactMessage from '../models/ContactMessage.js';
 import nodemailer from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
+import { processUpload } from '../utils/imageProcessor.js';
 
 // Get settings
 export const getSettings = async (req, res) => {
@@ -41,14 +42,18 @@ export const updateSettings = async (req, res) => {
       let bannerImages = settings.banner?.images || [];
       
       if (req.files && req.files.bannerImages) {
-        const newImages = req.files.bannerImages.map(file => `/uploads/${file.filename}`);
-        bannerImages = [...bannerImages, ...newImages];
+        const processedImages = [];
+        for (const file of req.files.bannerImages) {
+          const optimizedPath = await processUpload(file);
+          processedImages.push(optimizedPath);
+        }
+        bannerImages = [...bannerImages, ...processedImages];
       }
       
       if (req.files && req.files.bannerImage) {
-        const singleImage = `/uploads/${req.files.bannerImage[0].filename}`;
-        if (!bannerImages.includes(singleImage)) {
-          bannerImages.push(singleImage);
+        const optimizedPath = await processUpload(req.files.bannerImage[0]);
+        if (!bannerImages.includes(optimizedPath)) {
+          bannerImages.push(optimizedPath);
         }
       }
       

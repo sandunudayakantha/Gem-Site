@@ -212,25 +212,27 @@ const ProductForm = () => {
     try {
       const response = await api.get(`/products/${id}`)
       const product = response.data
-      const categoryId = product.category._id
+      
+      // Be robust about getting the category ID
+      const categoryId = product.category?._id || product.category?.id || product.categoryId
       
       // Set selected sizes and colors from product
-      setSelectedSizes(product.sizes || [])
-      setSelectedColors(product.colors || [])
+      setSelectedSizes(Array.isArray(product.sizes) ? product.sizes : [])
+      setSelectedColors(Array.isArray(product.colors) ? product.colors : [])
       
       setFormData({
-        title: product.title,
-        description: product.description,
-        category: categoryId,
+        title: product.title || '',
+        description: product.description || '',
+        category: categoryId || '',
         subcategory: product.subcategory || '',
-        price: product.price,
+        price: product.price || '',
         discountPrice: product.discountPrice || '',
-        sizes: product.sizes.join(', '), // Keep for backward compatibility
-        colors: product.colors.join(', '),
-        stock: product.stock,
-        featured: product.featured,
-        newArrival: product.newArrival,
-        freeDelivery: product.freeDelivery || false,
+        sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : '',
+        colors: Array.isArray(product.colors) ? product.colors.join(', ') : '',
+        stock: product.stock || '',
+        featured: !!product.featured,
+        newArrival: !!product.newArrival,
+        freeDelivery: !!product.freeDelivery,
         weight: product.weight || '',
         dimensions: product.dimensions || '',
         cut: product.cut || '',
@@ -323,7 +325,7 @@ const ProductForm = () => {
     try {
       const submitData = new FormData()
       Object.keys(formData).forEach(key => {
-        if (key !== 'sizes' && key !== 'colors' && formData[key] !== '' && formData[key] !== null) {
+        if (key !== 'sizes' && key !== 'colors' && key !== 'dimensions' && formData[key] !== '' && formData[key] !== null) {
           submitData.append(key, formData[key])
         }
       })
@@ -457,7 +459,6 @@ const ProductForm = () => {
                 type="number"
                 name="price"
                 value={formData.price}
-                onChange={handleChange}
                 onChange={handleChange}
                 min="0"
                 step="0.01"

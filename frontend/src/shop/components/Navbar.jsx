@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useCart } from '../../shared/context/CartContext'
 import api from '../../shared/config/api'
+import logo from '../../shared/images/logo.png'
 
 const Navbar = () => {
   const [categories, setCategories] = useState([])
@@ -51,9 +52,10 @@ const Navbar = () => {
     <nav className="fixed bg-white/80 backdrop-blur-md shadow-sm border-b border-black/5 top-0 left-0 right-0 z-50 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center h-20">
-          <Link to="/" className="flex items-center">
-            <span className="text-xl md:text-2xl font-light tracking-widest uppercase text-black">
-              A S Gems
+          <Link to="/" className="flex items-center gap-4">
+            <img src={logo} alt="A S Gems Logo" className="h-12 md:h-16 w-auto" />
+            <span className="text-xl md:text-2xl font-light tracking-[0.2em] uppercase text-gold-gradient hidden sm:block">
+              Collection
             </span>
           </Link>
 
@@ -61,7 +63,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-10">
             <Link
               to="/"
-              className="text-sm transition-colors duration-300 tracking-wider uppercase font-light text-black/80 hover:text-black"
+              className="text-sm transition-colors duration-300 tracking-wider uppercase font-light text-black/80 hover:text-[#B38728]"
             >
               Home
             </Link>
@@ -70,7 +72,7 @@ const Navbar = () => {
             <div className="categories-dropdown">
               <button
                 onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
-                className="text-sm transition-colors duration-300 flex items-center tracking-wider uppercase font-light text-black/80 hover:text-black"
+                className="text-sm transition-colors duration-300 flex items-center tracking-wider uppercase font-light text-black/80 hover:text-[#B38728]"
               >
                 Categories
                 <svg className={`ml-2 h-3 w-3 transition-transform duration-300 ${isCategoriesOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,16 +128,16 @@ const Navbar = () => {
 
                     {/* View All Categories Link */}
                     <div className="mt-12 pt-8 border-t border-black/10">
-                      <Link
-                        to="/products"
-                        className="inline-flex items-center text-xs tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors duration-300 group/viewall cursor-pointer"
-                        onClick={() => setIsCategoriesOpen(false)}
-                      >
-                        View All Categories
-                        <svg className="ml-2 h-3 w-3 transition-transform duration-300 group-hover/viewall:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </Link>
+                        <Link
+                          to="/products"
+                          className="inline-flex items-center text-xs tracking-widest uppercase font-light text-black hover:text-[#B38728] transition-colors duration-300 group/viewall cursor-pointer"
+                          onClick={() => setIsCategoriesOpen(false)}
+                        >
+                          View All Categories
+                          <svg className="ml-2 h-3 w-3 transition-transform duration-300 group-hover/viewall:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
                     </div>
                   </div>
                 </div>
@@ -144,19 +146,19 @@ const Navbar = () => {
 
             <Link
               to="/products"
-              className="text-sm transition-colors duration-300 tracking-wider uppercase font-light text-black/80 hover:text-black"
+              className="text-sm transition-colors duration-300 tracking-wider uppercase font-light text-black/80 hover:text-[#B38728]"
             >
               Products
             </Link>
             <Link
               to="/contact"
-              className="text-sm transition-colors duration-300 tracking-wider uppercase font-light text-black/80 hover:text-black"
+              className="text-sm transition-colors duration-300 tracking-wider uppercase font-light text-black/80 hover:text-[#B38728]"
             >
               Contact
             </Link>
             <Link
               to="/cart"
-              className="relative transition-colors duration-300 text-black/80 hover:text-black"
+              className="relative transition-colors duration-300 text-black/80 hover:text-[#B38728]"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -203,14 +205,14 @@ const Navbar = () => {
             <div className="space-y-6">
               <Link
                 to="/"
-                className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors"
+                className="block text-sm tracking-widest uppercase font-light text-black hover:text-[#B38728] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Home
               </Link>
               <Link
                 to="/products"
-                className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors"
+                className="block text-sm tracking-widest uppercase font-light text-black hover:text-[#B38728] transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 All Products
@@ -224,7 +226,7 @@ const Navbar = () => {
                   <div key={category._id} className="mb-8 last:mb-0">
                     <Link
                       to={`/products?category=${category._id}`}
-                      className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors mb-3"
+                      className="block text-sm tracking-widest uppercase font-light text-black hover:text-[#B38728] transition-colors mb-3"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {category.name}
@@ -235,7 +237,7 @@ const Navbar = () => {
                           <Link
                             key={sub._id}
                             to={`/products?category=${sub._id}`}
-                            className="block text-xs tracking-wider font-light text-black/60 hover:text-black transition-colors"
+                            className="block text-xs tracking-wider font-light text-black/60 hover:text-[#B38728] transition-colors"
                             onClick={() => setIsMenuOpen(false)}
                           >
                             {sub.name}
@@ -250,14 +252,14 @@ const Navbar = () => {
               <div className="pt-4 border-t border-black/5 space-y-6">
                 <Link
                   to="/contact"
-                  className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors"
+                  className="block text-sm tracking-widest uppercase font-light text-black hover:text-[#B38728] transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Contact
                 </Link>
                 <Link
                   to="/cart"
-                  className="block text-sm tracking-widest uppercase font-light text-black hover:text-black/70 transition-colors"
+                  className="block text-sm tracking-widest uppercase font-light text-black hover:text-[#B38728] transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Cart ({getCartCount()})

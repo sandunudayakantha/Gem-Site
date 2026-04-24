@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
+import logo from '../../shared/images/logo.png'
 
 const Sidebar = () => {
   const location = useLocation()
@@ -20,9 +21,12 @@ const Sidebar = () => {
   return (
     <div className="w-64 bg-white border-r border-gray-200 min-h-screen fixed left-0 top-0">
       <div className="p-6">
-        <h1 className="text-2xl font-light tracking-widest uppercase text-black">
-          A S Gems
-        </h1>
+        <div className="flex items-center gap-3">
+          <img src={logo} alt="A S Gems Logo" className="h-14 w-auto" />
+          <span className="text-xl font-light tracking-widest uppercase text-gold-gradient">
+            Collection
+          </span>
+        </div>
         <p className="text-xs text-gray-400 mt-1 uppercase tracking-tighter">Admin Panel</p>
       </div>
       <nav className="p-4">

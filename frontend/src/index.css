@@ -120,3 +120,16 @@ html {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+/* Luxury Gold Text Gradient */
+.text-gold-gradient {
+  background: linear-gradient(
+    to bottom, 
+    #FCF6BA 0%, 
+    #B38728 40%, 
+    #735019 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

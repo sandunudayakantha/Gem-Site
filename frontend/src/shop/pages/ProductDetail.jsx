@@ -19,12 +19,24 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [showDirectOrder, setShowDirectOrder] = useState(false)
+  const [showCertModal, setShowCertModal] = useState(false)
+  const [certifications, setCertifications] = useState([])
   const { cart, addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
 
   useEffect(() => {
     fetchColors()
+    fetchCertifications()
     fetchProduct()
   }, [id])
+
+  const fetchCertifications = async () => {
+    try {
+      const response = await api.get('/certifications')
+      setCertifications(response.data)
+    } catch (error) {
+      console.error('Error fetching certifications:', error)
+    }
+  }
 
   const fetchColors = async () => {
     try {
@@ -278,7 +290,22 @@ const ProductDetail = () => {
                 {product.certification && (
                   <div className="flex flex-col">
                     <span className="text-[10px] tracking-[0.2em] uppercase text-black/40 mb-1.5">Certification</span>
-                    <span className="text-sm font-light tracking-wide">{product.certification}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-light tracking-wide">{product.certification}</span>
+                      {certifications.find(c => c.displayName === product.certification)?.image && (
+                        <button 
+                          onClick={() => setShowCertModal(true)}
+                          className="group relative flex items-center"
+                          title="Click to view full certificate"
+                        >
+                          <img 
+                            src={getImageUrl(certifications.find(c => c.displayName === product.certification).image)}
+                            alt={product.certification}
+                            className="h-8 w-auto object-contain cursor-zoom-in transition-transform group-hover:scale-110"
+                          />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -320,6 +347,31 @@ const ProductDetail = () => {
         selectedColor=""
         quantity={1}
       />
+
+      {/* Certification Image Modal */}
+      {showCertModal && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowCertModal(false)}
+        >
+          <div className="relative max-w-5xl w-full h-full flex items-center justify-center animate-zoom-in">
+            <button 
+              className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors p-2 z-[110]"
+              onClick={() => setShowCertModal(false)}
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <img 
+              src={getImageUrl(certifications.find(c => c.displayName === product.certification)?.image)}
+              alt="Full Certificate"
+              className="max-w-full max-h-[90vh] object-contain shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

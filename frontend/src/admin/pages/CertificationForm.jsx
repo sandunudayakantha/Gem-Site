@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import api from '../../shared/config/api'
+import api, { getImageUrl } from '../../shared/config/api'
 import Loading from '../components/Loading'
 
 const CertificationForm = () => {
@@ -11,8 +11,11 @@ const CertificationForm = () => {
   const [formData, setFormData] = useState({
     name: '',
     displayName: '',
-    order: 0
+    order: 0,
+    image: ''
   })
+  const [newImage, setNewImage] = useState(null)
+  const [currentImage, setCurrentImage] = useState('')
 
   useEffect(() => {
     if (id) {
@@ -27,8 +30,10 @@ const CertificationForm = () => {
       setFormData({
         name: cert.name,
         displayName: cert.displayName,
-        order: cert.order || 0
+        order: cert.order || 0,
+        image: cert.image || ''
       })
+      setCurrentImage(cert.image || '')
     } catch (error) {
       console.error('Error fetching certification:', error)
       toast.error('Failed to fetch certification')
@@ -45,20 +50,34 @@ const CertificationForm = () => {
     })
   }
 
+  const handleImageChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setNewImage(e.target.files[0])
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     
     try {
-      const submitData = {
-        ...formData,
-        order: parseInt(formData.order) || 0
+      const submitData = new FormData()
+      submitData.append('name', formData.name)
+      submitData.append('displayName', formData.displayName)
+      submitData.append('order', formData.order)
+      
+      if (newImage) {
+        submitData.append('image', newImage)
       }
 
       if (id) {
-        await api.put(`/certifications/${id}`, submitData)
+        await api.put(`/certifications/${id}`, submitData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         toast.success('Certification updated successfully')
       } else {
-        await api.post('/certifications', submitData)
+        await api.post('/certifications', submitData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         toast.success('Certification created successfully')
       }
       
@@ -125,6 +144,29 @@ const CertificationForm = () => {
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
           />
           <p className="text-xs text-gray-500 mt-1">Lower numbers appear first (0, 1, 2, ...)</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Certification Logo / Image
+          </label>
+          {currentImage && (
+            <div className="mb-4">
+              <p className="text-xs text-gray-500 mb-2">Current Image:</p>
+              <img 
+                src={getImageUrl(currentImage)} 
+                alt="Current Certification" 
+                className="h-20 w-auto object-contain border border-gray-200 rounded p-1"
+              />
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+          <p className="text-xs text-gray-500 mt-1">Upload a small logo or image for this certification</p>
         </div>
 
         <div className="flex gap-4">
