@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useCart } from '../../shared/context/CartContext'
+import { useCurrency } from '../../shared/context/CurrencyContext'
 import api from '../../shared/config/api'
 import logo from '../../shared/images/logo.png'
 
@@ -10,6 +11,7 @@ const Navbar = () => {
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { getCartCount } = useCart()
+  const { selectedCurrency, changeCurrency, currencies } = useCurrency()
 
   useEffect(() => {
     fetchCategories()
@@ -169,6 +171,22 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+
+            {/* Currency Switcher */}
+            <div className="relative group/currency ml-2 border-l border-black/10 pl-6 h-6 flex items-center">
+              <select
+                value={selectedCurrency}
+                onChange={(e) => changeCurrency(e.target.value)}
+                className="bg-transparent text-[11px] tracking-widest uppercase font-light text-black/70 hover:text-black focus:outline-none appearance-none cursor-pointer pr-4"
+              >
+                {currencies.map(c => (
+                  <option key={c.code} value={c.code}>{c.code}</option>
+                ))}
+              </select>
+              <svg className="absolute right-0 w-2.5 h-2.5 text-black/40 pointer-events-none group-hover/currency:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
 
           {/* Mobile Navigation Controls */}
@@ -187,6 +205,22 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+
+            {/* Mobile Currency Switcher */}
+            <div className="relative group/currency flex items-center border-l border-black/10 pl-4 h-5">
+              <select
+                value={selectedCurrency}
+                onChange={(e) => changeCurrency(e.target.value)}
+                className="bg-transparent text-[10px] tracking-widest uppercase font-light text-black/70 focus:outline-none appearance-none cursor-pointer pr-3"
+              >
+                {currencies.map(c => (
+                  <option key={c.code} value={c.code}>{c.code}</option>
+                ))}
+              </select>
+              <svg className="absolute right-0 w-2 h-2 text-black/40 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
 
             <button
               className="transition-colors duration-300 text-black"

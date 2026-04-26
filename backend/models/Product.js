@@ -30,6 +30,10 @@ const Product = sequelize.define('Product', {
     allowNull: false,
     defaultValue: []
   },
+  thumbnail: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   sizes: {
     type: DataTypes.JSON,
     allowNull: false,

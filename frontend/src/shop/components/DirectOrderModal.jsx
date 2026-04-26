@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import api, { getImageUrl } from '../../shared/config/api'
+import { useCurrency } from '../../shared/context/CurrencyContext'
 import ClaimSuccessModal from './ClaimSuccessModal'
 
 const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColor, quantity }) => {
+  const { formatPrice } = useCurrency()
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -139,7 +141,7 @@ const DirectOrderModal = ({ isOpen, onClose, product, selectedSize, selectedColo
                 <h3 className="text-sm md:text-lg font-light text-black mb-1 tracking-wide">{product.title}</h3>
                 <div className="space-y-1 mb-2">
                 </div>
-                <p className="text-lg md:text-xl font-light text-black tracking-wide">${total.toFixed(2)}</p>
+                <p className="text-lg md:text-xl font-light text-black tracking-wide">{formatPrice(total)}</p>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../../shared/context/CartContext'
+import { useCurrency } from '../../shared/context/CurrencyContext'
 import { getImageUrl } from '../../shared/config/api'
 import api from '../../shared/config/api'
 import toast from 'react-hot-toast'
@@ -9,6 +10,7 @@ import cartUpperBg from '../../shared/images/cart-upper.jpeg'
 
 const Cart = () => {
   const { cart, removeFromCart, updateCartQuantity, getCartTotal } = useCart()
+  const { formatPrice } = useCurrency()
   const [colorsMap, setColorsMap] = useState({})
   const [settings, setSettings] = useState(null)
 
@@ -27,23 +29,8 @@ const Cart = () => {
   }
 
   // Calculate delivery fee
-  const calculateDeliveryFee = () => {
-    if (!settings || !cart.length) return 0
-    
-    // Check if all products have free delivery
-    const allFreeDelivery = cart.every(item => item.productData?.freeDelivery === true)
-    
-    if (allFreeDelivery) {
-      return 0
-    }
-    
-    // Return the default delivery fee from settings
-    return settings.deliveryFee || 0
-  }
-
-  const deliveryFee = calculateDeliveryFee()
   const subtotal = getCartTotal()
-  const total = subtotal + deliveryFee
+  const total = Number(subtotal)
 
   const fetchColors = async () => {
     try {
@@ -168,17 +155,32 @@ const Cart = () => {
                       </Link>
                       <div className="flex-1">
                         <Link to={`/products/${item.product}`}>
-                          <h3 className="text-lg md:text-xl font-light text-black mb-3 tracking-wide hover:text-black/70 transition-colors duration-300">
+                          <h3 className="text-sm md:text-xl font-light text-black mb-2 md:mb-3 tracking-wide hover:text-black/70 transition-colors duration-300">
                             {item.productData.title}
                           </h3>
                         </Link>
-                        <div className="flex items-center justify-between mt-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-6">
                           <div>
-                            <p className="text-xl md:text-2xl font-light text-black tracking-wide">
-                              ${Number(item.price).toFixed(2)}
+                            <p className="text-lg md:text-2xl font-light text-black tracking-wide">
+                              {formatPrice(item.price)}
                             </p>
                           </div>
-                          <div className="flex items-center gap-6">
+                          <div className="flex items-center gap-4 md:gap-6">
+                            <div className="flex items-center border border-black/10">
+                              <button
+                                onClick={() => handleQuantityChange(item.product, item.size, item.color, item.quantity - 1)}
+                                className="w-8 h-8 flex items-center justify-center hover:bg-black/5 transition-colors"
+                              >
+                                -
+                              </button>
+                              <span className="w-10 text-center text-sm font-light">{item.quantity}</span>
+                              <button
+                                onClick={() => handleQuantityChange(item.product, item.size, item.color, item.quantity + 1)}
+                                className="w-8 h-8 flex items-center justify-center hover:bg-black/5 transition-colors"
+                              >
+                                +
+                              </button>
+                            </div>
                             <button
                               onClick={() => {
                                 removeFromCart(item.product, item.size, item.color)
@@ -203,24 +205,18 @@ const Cart = () => {
             {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="border border-black/10 p-8 sticky top-20">
-                <h2 className="text-xl md:text-2xl font-light tracking-tight text-black mb-8 pb-4 border-b border-black/10">
+                <h2 className="text-lg md:text-2xl font-light tracking-tight text-black mb-6 md:mb-8 pb-4 border-b border-black/10">
                   Order Summary
                 </h2>
                 <div className="space-y-4 mb-8">
-                  <div className="flex justify-between text-black/70 font-light tracking-wide">
+                  <div className="flex justify-between text-black/70 font-light tracking-wide text-sm md:text-base">
                     <span>Subtotal</span>
-                    <span className="text-black">${Number(subtotal).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-black/70 font-light tracking-wide">
-                    <span>Delivery</span>
-                    <span className="text-black">
-                      {deliveryFee === 0 ? 'Free' : `$${Number(deliveryFee).toFixed(2)}`}
-                    </span>
+                    <span className="text-black">{formatPrice(subtotal)}</span>
                   </div>
                   <div className="border-t border-black/10 pt-4 mt-4">
                     <div className="flex justify-between text-xl font-light tracking-wide text-black">
                       <span>Total</span>
-                      <span>${Number(total).toFixed(2)}</span>
+                      <span>{formatPrice(total)}</span>
                     </div>
                   </div>
                 </div>

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api, { getImageUrl } from '../../shared/config/api'
 import { useCart } from '../../shared/context/CartContext'
+import { useCurrency } from '../../shared/context/CurrencyContext'
 import Loading from '../components/Loading'
 import DirectOrderModal from '../components/DirectOrderModal'
 import ourCollectionBg from '../../shared/images/our-collection.jpg'
@@ -22,6 +23,7 @@ const ProductDetail = () => {
   const [showCertModal, setShowCertModal] = useState(false)
   const [certifications, setCertifications] = useState([])
   const { cart, addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart()
+  const { formatPrice } = useCurrency()
 
   useEffect(() => {
     fetchColors()
@@ -174,15 +176,15 @@ const ProductDetail = () => {
               {hasDiscount ? (
                 <div className="flex items-center gap-4">
                   <span className="text-2xl md:text-3xl font-light tracking-wide">
-                    ${Number(price).toFixed(2)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
+                    {formatPrice(product.discountPrice)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
                   </span>
                   <span className="text-lg md:text-xl text-white/60 line-through font-light">
-                    ${Number(product.price).toFixed(2)}
+                    {formatPrice(product.price)}
                   </span>
                 </div>
               ) : (
                 <span className="text-2xl md:text-3xl font-light tracking-wide">
-                  ${Number(price).toFixed(2)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
+                  {formatPrice(product.price)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
                 </span>
               )}
             </div>

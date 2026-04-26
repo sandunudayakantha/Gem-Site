@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api, { getImageUrl } from '../../shared/config/api'
 import { useCart } from '../../shared/context/CartContext'
+import { useCurrency } from '../../shared/context/CurrencyContext'
 import ClaimSuccessModal from '../components/ClaimSuccessModal'
 import cartBg from '../../shared/images/cart-back.jpg'
 import cartUpperBg from '../../shared/images/cart-upper.jpeg'
@@ -10,6 +11,7 @@ import cartUpperBg from '../../shared/images/cart-upper.jpeg'
 const Checkout = () => {
   const navigate = useNavigate()
   const { cart, getCartTotal, clearCart } = useCart()
+  const { formatPrice } = useCurrency()
   const [colorsMap, setColorsMap] = useState({})
   const [settings, setSettings] = useState(null)
   const [formData, setFormData] = useState({
@@ -49,23 +51,8 @@ const Checkout = () => {
   }
 
   // Calculate delivery fee
-  const calculateDeliveryFee = () => {
-    if (!settings || !cart.length) return 0
-    
-    // Check if all products have free delivery
-    const allFreeDelivery = cart.every(item => item.productData?.freeDelivery === true)
-    
-    if (allFreeDelivery) {
-      return 0
-    }
-    
-    // Return the default delivery fee from settings
-    return settings.deliveryFee || 0
-  }
-
-  const deliveryFee = calculateDeliveryFee()
   const subtotal = getCartTotal()
-  const total = subtotal + deliveryFee
+  const total = Number(subtotal)
 
   const getColorInfo = (colorName) => {
     const colorInfo = colorsMap[colorName?.toLowerCase()] || {}
@@ -106,7 +93,7 @@ const Checkout = () => {
           quantity: item.quantity
         })),
         customer: formData,
-        deliveryFee: deliveryFee
+        deliveryFee: 0
       }
 
       const response = await api.post('/orders', orderData)
@@ -321,7 +308,7 @@ const Checkout = () => {
                           <span>Qty: {item.quantity}</span>
                         </div>
                         <p className="text-base font-light text-black tracking-wide">
-                          ${(Number(item.price) * item.quantity).toFixed(2)}
+                          {formatPrice(Number(item.price) * item.quantity)}
                         </p>
                       </div>
                     </div>
@@ -330,18 +317,12 @@ const Checkout = () => {
                 <div className="border-t border-black/10 pt-6 space-y-4">
                   <div className="flex justify-between text-black/70 font-light tracking-wide">
                     <span>Subtotal</span>
-                    <span className="text-black">${Number(subtotal).toFixed(2)}</span>
+                    <span className="text-black">{formatPrice(subtotal)}</span>
                    </div>
-                  <div className="flex justify-between text-black/70 font-light tracking-wide">
-                    <span>Delivery</span>
-                    <span className="text-black">
-                      {deliveryFee === 0 ? 'Free' : `$${Number(deliveryFee).toFixed(2)}`}
-                    </span>
-                  </div>
                   <div className="border-t border-black/10 pt-4 mt-4">
                     <div className="flex justify-between text-xl font-light tracking-wide text-black">
                       <span>Total</span>
-                      <span>${Number(total).toFixed(2)}</span>
+                      <span>{formatPrice(total)}</span>
                     </div>
                   </div>
                 </div>

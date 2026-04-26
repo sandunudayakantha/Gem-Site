@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import api from '../../shared/config/api'
+import api, { getImageUrl } from '../../shared/config/api'
 import Loading from '../components/Loading'
 
 const ProductForm = () => {
@@ -44,6 +44,8 @@ const ProductForm = () => {
   })
   const [images, setImages] = useState([])
   const [newImages, setNewImages] = useState([])
+  const [imagesToDelete, setImagesToDelete] = useState([])
+  const [thumbnailImage, setThumbnailImage] = useState(null)
   const [dimensionValues, setDimensionValues] = useState({ length: '', width: '', height: '' })
 
   useEffect(() => {
@@ -245,18 +247,11 @@ const ProductForm = () => {
       })
 
       // Parse dimensions if they exist
-      if (product.dimensions) {
-        const dimMatch = product.dimensions.match(/(\d+\.?\d*)\s*[×x*]\s*(\d+\.?\d*)\s*[×x*]\s*(\d+\.?\d*)/i)
-        if (dimMatch) {
-          setDimensionValues({
-            length: dimMatch[1],
-            width: dimMatch[2],
-            height: dimMatch[3]
-          })
-        }
-      }
-
+      const dimMatch = product.dimensions?.match(/(\d+\.?\d*)\s*[×x*]\s*(\d+\.?\d*)\s*[×x*]\s*(\d+\.?\d*)/i)
+      setDimensionValues(dimMatch ? { length: dimMatch[1], width: dimMatch[2], height: dimMatch[3] } : { length: '', width: '', height: '' })
+      
       setImages(product.images || [])
+      setThumbnailImage(product.thumbnail || (product.images?.[0] || null))
     } catch (error) {
       console.error('Error fetching product:', error)
       toast.error('Failed to fetch product')
@@ -343,6 +338,20 @@ const ProductForm = () => {
       newImages.forEach(file => {
         submitData.append('images', file)
       })
+
+      // Send thumbnail selection
+      if (thumbnailImage) {
+        if (typeof thumbnailImage === 'string') {
+          submitData.append('thumbnail', thumbnailImage)
+        } else if (thumbnailImage.type === 'new') {
+          submitData.append('thumbnailIndex', thumbnailImage.index)
+        }
+      }
+
+      // Send images to delete
+      if (imagesToDelete.length > 0) {
+        submitData.append('imagesToDelete', JSON.stringify(imagesToDelete))
+      }
 
       if (id) {
         await api.put(`/products/${id}`, submitData, {
@@ -679,31 +688,109 @@ const ProductForm = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-900 mb-2">
-            Images {!id && '*'}
+          <label className="block text-sm font-semibold text-gray-900 mb-4">
+            Product Images {!id && '*'}
           </label>
-          {id && images.length > 0 && (
-            <div className="grid grid-cols-4 gap-4 mb-4">
-              {images.map((img, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={`http://localhost:5007${img}`}
-                    alt={`Product ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
+          
+          {/* Combined Image Gallery */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+            {/* Existing Images */}
+            {images.filter(img => !imagesToDelete.includes(img)).map((img, index) => (
+              <div key={`ext-${index}`} className={`relative group border-2 rounded-lg overflow-hidden transition-all ${thumbnailImage === img ? 'border-accent shadow-md' : 'border-gray-200'}`}>
+                <img
+                  src={getImageUrl(img)}
+                  alt={`Existing ${index}`}
+                  className="w-full h-32 object-cover"
+                />
+                {thumbnailImage === img && (
+                  <div className="absolute top-2 left-2 bg-accent text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                    Primary
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setThumbnailImage(img)}
+                    className="bg-white text-gray-900 text-xs px-3 py-1 rounded hover:bg-accent hover:text-white transition"
+                  >
+                    Set Primary
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImagesToDelete([...imagesToDelete, img])}
+                    className="bg-red-500 text-white text-xs px-3 py-1 rounded hover:bg-red-600 transition"
+                  >
+                    Delete
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+
+            {/* New Images Previews */}
+            {newImages.map((file, index) => {
+              const previewUrl = URL.createObjectURL(file);
+              const isThumbnail = thumbnailImage?.type === 'new' && thumbnailImage.index === index;
+              
+              return (
+                <div key={`new-${index}`} className={`relative group border-2 rounded-lg overflow-hidden transition-all ${isThumbnail ? 'border-accent shadow-md' : 'border-dashed border-gray-300'}`}>
+                  <img
+                    src={previewUrl}
+                    alt={`New ${index}`}
+                    className="w-full h-32 object-cover opacity-70"
+                  />
+                  <div className="absolute top-2 left-2 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                    New Upload
+                  </div>
+                  {isThumbnail && (
+                    <div className="absolute bottom-2 left-2 bg-accent text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                      Primary
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setThumbnailImage({ type: 'new', index })}
+                      className="bg-white text-gray-900 text-xs px-3 py-1 rounded hover:bg-accent hover:text-white transition"
+                    >
+                      Set Primary
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewImages(newImages.filter((_, i) => i !== index))}
+                      className="bg-red-500 text-white text-xs px-3 py-1 rounded hover:bg-red-600 transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Add More Button */}
+            <label className="border-2 border-dashed border-gray-300 rounded-lg h-32 flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-gray-50 transition group">
+              <svg className="w-8 h-8 text-gray-400 group-hover:text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="text-xs text-gray-500 group-hover:text-accent mt-2 font-medium">Add Images</span>
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files);
+                  setNewImages([...newImages, ...files]);
+                }}
+                className="hidden"
+              />
+            </label>
+          </div>
+
+          {!id && newImages.length === 0 && (
+            <p className="text-sm text-red-500 mt-2">At least one image is required for new products.</p>
           )}
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleImageChange}
-            required={!id}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-          <p className="text-sm text-gray-500 mt-2">You can select multiple images</p>
+          <p className="text-sm text-gray-500">
+            Hover over an image to set it as <strong>Primary</strong> (thumbnail) or to delete it.
+          </p>
         </div>
 
 

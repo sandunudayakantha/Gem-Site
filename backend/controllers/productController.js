@@ -1,4 +1,6 @@
 import { Op } from 'sequelize';
+import fs from 'fs';
+import path from 'path';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
 import StoreSettings from '../models/StoreSettings.js';
@@ -72,6 +74,10 @@ export const getProducts = async (req, res) => {
     const page = req.query.page ? parseInt(req.query.page) : 1;
     const limit = req.query.limit ? parseInt(req.query.limit) : 12;
     const offset = (page - 1) * limit;
+
+    if (andConditions.length > 0) {
+      where[Op.and] = andConditions;
+    }
 
     const { count, rows: products } = await Product.findAndCountAll({
       where,
@@ -154,6 +160,9 @@ export const createProduct = async (req, res) => {
     const productData = {
       ...req.body,
       images: images,
+      thumbnail: (req.body.thumbnailIndex !== undefined && images.length > 0) 
+        ? images[parseInt(req.body.thumbnailIndex)] 
+        : (images.length > 0 ? images[0] : null),
       categoryId: parseInt(req.body.category),
       price: (req.body.price && req.body.price !== '') ? parseFloat(req.body.price) : null,
       discountPrice: (req.body.discountPrice && req.body.discountPrice !== '') ? parseFloat(req.body.discountPrice) : null,
@@ -170,6 +179,7 @@ export const createProduct = async (req, res) => {
       treatment: req.body.treatment || null,
       origin: req.body.origin || null,
       certification: req.body.certification || null,
+      thumbnail: req.body.thumbnail || null,
       priceUnit: req.body.priceUnit || 'total'
     };
 
@@ -196,16 +206,45 @@ export const updateProduct = async (req, res) => {
 
     const updateData = { ...req.body };
     
+    if (updateData.category) updateData.categoryId = parseInt(updateData.category);
+    
+    // Handle image deletions
+    let currentImages = [...(productDoc.images || [])];
+    if (req.body.imagesToDelete) {
+      try {
+        const toDelete = JSON.parse(req.body.imagesToDelete);
+        currentImages = currentImages.filter(img => !toDelete.includes(img));
+        
+        // Optional: Delete from disk
+        toDelete.forEach(img => {
+          const fullPath = path.join(process.cwd(), img.startsWith('/') ? img.substring(1) : img);
+          if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+        });
+      } catch (e) {
+        console.error('Error parsing imagesToDelete:', e);
+      }
+    }
+
     if (req.files && req.files.length > 0) {
       const newImages = [];
       for (const file of req.files) {
         const optimizedPath = await processUpload(file);
         newImages.push(optimizedPath);
       }
-      updateData.images = [...(productDoc.images || []), ...newImages];
+      
+      // If thumbnailIndex was provided, set it from the new images
+      if (req.body.thumbnailIndex !== undefined) {
+        const idx = parseInt(req.body.thumbnailIndex);
+        if (idx >= 0 && idx < newImages.length) {
+          updateData.thumbnail = newImages[idx];
+        }
+      }
+      
+      updateData.images = [...currentImages, ...newImages];
+    } else {
+      updateData.images = currentImages;
     }
 
-    if (updateData.category) updateData.categoryId = parseInt(updateData.category);
     if (updateData.price !== undefined) {
       updateData.price = (updateData.price && updateData.price !== '') ? parseFloat(updateData.price) : null;
     }
@@ -227,7 +266,7 @@ export const updateProduct = async (req, res) => {
     
     // String fields will be taken from updateData (...req.body) directly 
     // but ensured they are null if empty string
-    const stringFields = ['dimensions', 'cut', 'gemColor', 'clarity', 'treatment', 'origin', 'certification', 'priceUnit'];
+    const stringFields = ['dimensions', 'cut', 'gemColor', 'clarity', 'treatment', 'origin', 'certification', 'priceUnit', 'thumbnail'];
     stringFields.forEach(field => {
       if (updateData[field] === '') updateData[field] = null;
     });

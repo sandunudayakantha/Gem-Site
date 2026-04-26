@@ -39,7 +39,7 @@ const Products = () => {
       // Auto-expand parent if a subcategory is selected
       if (categories.length > 0) {
         const parent = categories.find(c => 
-          c._id === category || c.subcategories?.some(s => s._id === category)
+          String(c._id) === String(category) || c.subcategories?.some(s => String(s._id) === String(category))
         )
         if (parent) setExpandedCategory(parent._id)
       }
@@ -126,8 +126,8 @@ const Products = () => {
       // Find name in main or subcategories
       let catName = 'Products'
       categories.forEach(c => {
-        if (c._id === category) catName = c.name
-        const sub = c.subcategories?.find(s => s._id === category)
+        if (String(c._id) === String(category)) catName = c.name
+        const sub = c.subcategories?.find(s => String(s._id) === String(category))
         if (sub) catName = sub.name
       })
       return catName
@@ -210,7 +210,9 @@ const Products = () => {
                 )}
                 {category && (
                   <span className="text-xs px-3 py-1 border border-black/20 text-black font-light tracking-wide">
-                    {categories.find(c => c._id === category)?.name || 'Category'}
+                    {categories.find(c => String(c._id) === String(category))?.name || 
+                     categories.flatMap(c => c.subcategories || []).find(s => String(s._id) === String(category))?.name || 
+                     'Category'}
                   </span>
                 )}
                 <button
@@ -248,7 +250,7 @@ const Products = () => {
                         key={cat._id}
                         onClick={() => handleMainCategoryClick(cat._id)}
                         className={`text-[10px] md:text-xs px-5 py-2.5 border transition-all duration-300 font-light tracking-widest uppercase whitespace-nowrap shrink-0 ${
-                          expandedCategory === cat._id
+                          String(expandedCategory) === String(cat._id)
                             ? 'border-black text-black bg-black/5'
                             : 'border-black/20 text-black/60 hover:border-black hover:text-black'
                         }`}
@@ -271,7 +273,7 @@ const Products = () => {
                           key={sub._id}
                           onClick={() => handleSubCategoryClick(sub._id)}
                           className={`text-[10px] md:text-xs px-4 py-2 border-b transition-all duration-300 font-light tracking-widest uppercase whitespace-nowrap shrink-0 ${
-                            selectedCategory === sub._id
+                            String(selectedCategory) === String(sub._id)
                               ? 'border-black text-black'
                               : 'border-transparent text-black/40 hover:text-black hover:border-black/20'
                           }`}

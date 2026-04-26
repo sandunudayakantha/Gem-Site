@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useCart } from '../../shared/context/CartContext'
+import { useCurrency } from '../../shared/context/CurrencyContext'
 import { getImageUrl } from '../../shared/config/api'
 
 const ProductCard = ({ product }) => {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useCart()
+  const { formatPrice } = useCurrency()
   const inWishlist = isInWishlist(product._id)
   const price = product.discountPrice || product.price
   const hasDiscount = product.discountPrice && product.discountPrice < product.price
@@ -24,7 +26,7 @@ const ProductCard = ({ product }) => {
       <Link to={`/products/${product._id}`}>
         <div className="aspect-square overflow-hidden bg-gray-50">
           <img
-            src={getImageUrl(product.images?.[0])}
+            src={getImageUrl(product.thumbnail || product.images?.[0])}
             alt={product.title}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
             onError={(e) => {
@@ -51,13 +53,13 @@ const ProductCard = ({ product }) => {
               {hasDiscount ? (
                 <div className="flex items-baseline justify-center gap-2">
                   <span className="text-base font-light text-black tracking-wide">
-                    ${Number(price).toFixed(2)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
+                    {formatPrice(product.discountPrice)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
                   </span>
-                  <span className="text-xs text-gray-400 line-through font-light">${Number(product.price).toFixed(2)}</span>
+                  <span className="text-xs text-gray-400 line-through font-light">{formatPrice(product.price)}</span>
                 </div>
               ) : (
                 <span className="text-base font-light text-black tracking-wide">
-                  ${Number(price).toFixed(2)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
+                  {formatPrice(product.price)}{product.priceUnit === 'per_carat' ? ' / ct' : ''}
                 </span>
               )}
             </div>

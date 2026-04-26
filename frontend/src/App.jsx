@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast'
 
 // Shared
 import { CartProvider } from './shared/context/CartContext'
+import { CurrencyProvider } from './shared/context/CurrencyContext'
 import ConnectionStatus from './shop/components/ConnectionStatus'
 
 // Shop Components
@@ -48,8 +49,9 @@ import Settings from './admin/pages/Settings'
 
 function App() {
   return (
-    <CartProvider>
-      <Router>
+    <CurrencyProvider>
+      <CartProvider>
+        <Router>
         <div className="min-h-screen bg-white">
           <Toaster 
             position="top-right"
@@ -141,10 +143,10 @@ function App() {
             />
           </Routes>
         </div>
-      </Router>
-    </CartProvider>
+        </Router>
+      </CartProvider>
+    </CurrencyProvider>
   )
 }
 
 export default App
-
