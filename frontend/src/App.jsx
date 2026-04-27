@@ -46,6 +46,7 @@ import OriginForm from './admin/pages/OriginForm'
 import Certifications from './admin/pages/Certifications'
 import CertificationForm from './admin/pages/CertificationForm'
 import Settings from './admin/pages/Settings'
+import Profile from './admin/pages/Profile'
 
 function App() {
   return (
@@ -134,6 +135,7 @@ function App() {
                         <Route path="certifications/edit/:id" element={<CertificationForm />} />
                         <Route path="contact-messages" element={<ContactMessages />} />
                         <Route path="settings" element={<Settings />} />
+                        <Route path="profile" element={<Profile />} />
                         <Route path="*" element={<Navigate to="dashboard" replace />} />
                       </Routes>
                     </div>

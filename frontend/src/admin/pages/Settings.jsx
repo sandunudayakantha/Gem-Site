@@ -370,11 +370,51 @@ const Settings = () => {
 
         <button
           type="submit"
-          className="bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition"
+          className="bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition w-full md:w-auto"
         >
           Save Settings
         </button>
       </form>
+
+      {/* Database Maintenance Section */}
+      <div className="mt-12 bg-gray-50 border border-gray-200 rounded-lg p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <span>🛠️</span> Maintenance & Backups
+        </h2>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="max-w-xl">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Database Snapshot</h3>
+            <p className="text-sm text-gray-500">
+              Download a complete snapshot of your database in SQL format. This file can be used to re-import your data if the database crashes or if you migrate to a new server.
+            </p>
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                toast.loading('Preparing snapshot...', { id: 'backup' })
+                const response = await api.get('/settings/backup', { responseType: 'blob' })
+                
+                // Create download link
+                const url = window.URL.createObjectURL(new Blob([response.data]))
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', `asgems_backup_${new Date().toISOString().slice(0,10)}.sql`)
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+                
+                toast.success('Database snapshot downloaded successfully', { id: 'backup' })
+              } catch (error) {
+                console.error('Backup error:', error)
+                toast.error('Failed to download database snapshot', { id: 'backup' })
+              }
+            }}
+            className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition shadow-sm"
+          >
+            <span>📥</span> Download SQL Snapshot
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

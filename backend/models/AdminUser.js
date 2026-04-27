@@ -28,6 +28,14 @@ const AdminUser = sequelize.define('AdminUser', {
     validate: {
       len: [6, 255]
     }
+  },
+  verificationCode: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  verificationCodeExpires: {
+    type: DataTypes.DATE,
+    allowNull: true
   }
 }, {
   timestamps: true,

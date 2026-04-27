@@ -1,4 +1,5 @@
 import { Op } from 'sequelize';
+import db from '../models/index.js';
 import StoreSettings from '../models/StoreSettings.js';
 import ContactMessage from '../models/ContactMessage.js';
 import nodemailer from 'nodemailer';
@@ -13,6 +14,71 @@ export const getSettings = async (req, res) => {
     res.json(settings);
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Download Database Backup
+export const downloadBackup = async (req, res) => {
+  try {
+    console.log('Generating database backup...');
+    
+    // Get all tables
+    const [tables] = await db.sequelize.query("SHOW TABLES");
+    const dbName = db.sequelize.config.database;
+    const tableNames = tables.map(t => Object.values(t)[0]);
+
+    let sqlDump = `-- AS Gems Database Backup\n`;
+    sqlDump += `-- Date: ${new Date().toISOString()}\n\n`;
+    sqlDump += `SET FOREIGN_KEY_CHECKS = 0;\n\n`;
+
+    for (const tableName of tableNames) {
+      // Get Create Table statement
+      const [[createTable]] = await db.sequelize.query(`SHOW CREATE TABLE \`${tableName}\``);
+      sqlDump += `-- Table structure for table \`${tableName}\`\n`;
+      sqlDump += `DROP TABLE IF EXISTS \`${tableName}\`;\n`;
+      sqlDump += `${createTable['Create Table']};\n\n`;
+
+      // Get Data
+      const [rows] = await db.sequelize.query(`SELECT * FROM \`${tableName}\``);
+      if (rows.length > 0) {
+        sqlDump += `-- Dumping data for table \`${tableName}\`\n`;
+        
+        // Split into chunks to avoid too long strings
+        const chunkSize = 100;
+        for (let i = 0; i < rows.length; i += chunkSize) {
+          const chunk = rows.slice(i, i + chunkSize);
+          const columns = Object.keys(chunk[0]).map(c => `\`${c}\``).join(', ');
+          
+          sqlDump += `INSERT INTO \`${tableName}\` (${columns}) VALUES\n`;
+          
+          const values = chunk.map(row => {
+            const vals = Object.values(row).map(val => {
+              if (val === null) return 'NULL';
+              if (typeof val === 'string') return `'${val.replace(/'/g, "''")}'`;
+              if (val instanceof Date) return `'${val.toISOString().slice(0, 19).replace('T', ' ')}'`;
+              if (typeof val === 'object') return `'${JSON.stringify(val).replace(/'/g, "''")}'`;
+              return val;
+            });
+            return `(${vals.join(', ')})`;
+          }).join(',\n');
+          
+          sqlDump += `${values};\n`;
+        }
+        sqlDump += `\n`;
+      }
+    }
+
+    sqlDump += `SET FOREIGN_KEY_CHECKS = 1;\n`;
+
+    // Set headers for file download
+    const filename = `asgems_backup_${new Date().toISOString().slice(0, 10)}.sql`;
+    res.setHeader('Content-Type', 'application/sql');
+    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    
+    res.send(sqlDump);
+  } catch (error) {
+    console.error('Backup error:', error);
+    res.status(500).json({ message: 'Failed to generate database backup' });
   }
 };
 
@@ -65,7 +131,6 @@ export const updateSettings = async (req, res) => {
         // Delete original files from disk
         imagesToDelete.forEach(imagePath => {
           if (imagePath && typeof imagePath === 'string') {
-            // Remove the leading slash if it exists to join correctly with process.cwd()
             const relativePath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
             const fullPath = path.join(process.cwd(), relativePath);
             

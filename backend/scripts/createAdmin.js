@@ -12,10 +12,10 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const AdminUser = db.AdminUser;
 
-// Default admin credentials
+// Default admin credentials from .env or fallback
 const ADMIN_USERNAME = 'admin';
-const ADMIN_EMAIL = 'admin@sjclothing.com';
-const ADMIN_PASSWORD = 'Admin@123';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@asgems.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@123';
 
 async function createAdmin() {
   try {
@@ -27,38 +27,40 @@ async function createAdmin() {
     await db.sequelize.sync();
 
     // Check if admin already exists
-    const existingAdmin = await AdminUser.findOne({
+    let admin = await AdminUser.findOne({
       where: {
         [Op.or]: [{ username: ADMIN_USERNAME }, { email: ADMIN_EMAIL }]
       }
     });
 
-    if (existingAdmin) {
-      console.log('⚠️  Admin user already exists!');
-      console.log(`   Username: ${existingAdmin.username}`);
-      console.log(`   Email: ${existingAdmin.email}`);
-      console.log('\n💡 If you want to create a new admin, use different credentials.');
-      process.exit(0);
+    if (admin) {
+      console.log('🔄  Admin user already exists. Updating credentials...');
+      
+      admin.email = ADMIN_EMAIL;
+      admin.password = ADMIN_PASSWORD; // Model hook will hash this
+      
+      await admin.save();
+      
+      console.log('✅ Admin user updated successfully!\n');
+    } else {
+      // Create new admin
+      admin = await AdminUser.create({
+        username: ADMIN_USERNAME,
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD
+      });
+      console.log('✅ Admin user created successfully!\n');
     }
-
-    // Create new admin
-    await AdminUser.create({
-      username: ADMIN_USERNAME,
-      email: ADMIN_EMAIL,
-      password: ADMIN_PASSWORD
-    });
     
-    console.log('✅ Admin user created successfully!\n');
     console.log('📋 Admin Credentials:');
     console.log('   Username:', ADMIN_USERNAME);
-    console.log('   Email:', ADMIN_EMAIL);
+    console.log('   Email:   ', ADMIN_EMAIL);
     console.log('   Password:', ADMIN_PASSWORD);
-    console.log('\n🔐 Please change the password after first login!');
     console.log('\n🌐 Login at: http://localhost:5174/login');
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error creating admin:', error.message);
+    console.error('❌ Error managing admin:', error.message);
     process.exit(1);
   }
 }

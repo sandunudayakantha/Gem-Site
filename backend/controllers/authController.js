@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Op } from 'sequelize';
 import AdminUser from '../models/AdminUser.js';
+import { sendVerificationEmail } from '../utils/emailService.js';
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -53,7 +54,7 @@ export const adminLogin = async (req, res) => {
 export const getCurrentAdmin = async (req, res) => {
   try {
     const admin = await AdminUser.findByPk(req.user.id, {
-      attributes: { exclude: ['password'] }
+      attributes: { exclude: ['password', 'verificationCode', 'verificationCodeExpires'] }
     });
     res.json(admin);
   } catch (error) {
@@ -98,5 +99,69 @@ export const registerAdmin = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+// Request Verification Code
+export const requestVerificationCode = async (req, res) => {
+  try {
+    const admin = await AdminUser.findByPk(req.user.id);
+    
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Generate 6-digit code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiration = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    admin.verificationCode = verificationCode;
+    admin.verificationCodeExpires = expiration;
+    await admin.save();
+
+    // Send email
+    await sendVerificationEmail(admin.email, verificationCode);
+
+    res.json({ message: 'Verification code sent to email' });
+  } catch (error) {
+    console.error('Error in requestVerificationCode:', error);
+    res.status(500).json({ message: 'Failed to send verification code' });
+  }
+};
+
+// Reset Password with Code
+export const resetPasswordWithCode = async (req, res) => {
+  try {
+    const { code, newPassword } = req.body;
+
+    if (!code || !newPassword) {
+      return res.status(400).json({ message: 'Please provide code and new password' });
+    }
+
+    const admin = await AdminUser.findByPk(req.user.id);
+
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Verify code and check expiration
+    if (admin.verificationCode !== code) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    if (new Date() > admin.verificationCodeExpires) {
+      return res.status(400).json({ message: 'Verification code has expired' });
+    }
+
+    // Update password
+    admin.password = newPassword;
+    admin.verificationCode = null;
+    admin.verificationCodeExpires = null;
+    await admin.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Error in resetPasswordWithCode:', error);
+    res.status(500).json({ message: 'Failed to update password' });
   }
 };

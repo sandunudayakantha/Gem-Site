@@ -2,7 +2,8 @@ import express from 'express';
 import {
   getSettings,
   updateSettings,
-  sendContactEmail
+  sendContactEmail,
+  downloadBackup
 } from '../controllers/settingsController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { upload } from '../middleware/uploadMiddleware.js';
@@ -15,6 +16,7 @@ router.get('/', getSettings);
 router.post('/contact', sendContactEmail);
 
 // Protected routes (Admin only)
+router.get('/backup', protect, downloadBackup);
 router.put('/', protect, upload.fields([
   { name: 'bannerImage', maxCount: 1 },
   { name: 'bannerImages', maxCount: 10 }

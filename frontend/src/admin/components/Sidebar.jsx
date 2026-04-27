@@ -15,6 +15,7 @@ const Sidebar = () => {
     { path: '/admin/certifications', label: 'Certifications', icon: '📜' },
     { path: '/admin/orders', label: 'Orders', icon: '📦' },
     { path: '/admin/contact-messages', label: 'Messages', icon: '💬' },
+    { path: '/admin/profile', label: 'Profile', icon: '👤' },
     { path: '/admin/settings', label: 'Settings', icon: '⚙️' },
   ]
 
