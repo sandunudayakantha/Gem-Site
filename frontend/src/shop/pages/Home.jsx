@@ -254,7 +254,7 @@ const Home = () => {
             to="/products"
             className="inline-block border-2 border-white text-white px-12 py-4 text-sm tracking-widest uppercase font-light hover:bg-white hover:text-black transition-all duration-300"
           >
-            Our Collection
+            AS COLLECTION
           </Link>
         </div>
       </section>
@@ -269,7 +269,7 @@ const Home = () => {
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-baseline mb-16">
-            <h2 className="text-4xl md:text-5xl font-light tracking-tight text-black">Our Collection</h2>
+            <h2 className="text-4xl md:text-5xl font-light tracking-tight text-black">AS COLLECTION</h2>
             <Link
               to="/products"
               className="text-sm tracking-widest uppercase font-light text-black border-b border-black/20 hover:border-black transition-colors duration-300"

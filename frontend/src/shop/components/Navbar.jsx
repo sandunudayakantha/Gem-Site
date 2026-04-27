@@ -57,7 +57,7 @@ const Navbar = () => {
           <Link to="/" className="flex items-center gap-4">
             <img src={logo} alt="A S Gems Logo" className="h-12 md:h-16 w-auto" />
             <span className="text-xl md:text-2xl font-light tracking-[0.2em] uppercase text-gold-gradient hidden sm:block">
-              Collection
+              AS COLLECTION
             </span>
           </Link>
 
@@ -254,7 +254,7 @@ const Navbar = () => {
               
               <div className="pt-4 border-t border-black/5">
                 <span className="block text-[10px] tracking-[0.2em] uppercase font-light text-black/40 mb-6">
-                  Experience the Collection
+                  Experience the AS COLLECTION
                 </span>
                 {categories.map(category => (
                   <div key={category._id} className="mb-8 last:mb-0">

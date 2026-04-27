@@ -4,7 +4,9 @@ import {
   getCurrentAdmin,
   registerAdmin,
   requestVerificationCode,
-  resetPasswordWithCode
+  resetPasswordWithCode,
+  forgotPasswordRequest,
+  forgotPasswordReset
 } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -15,6 +17,8 @@ router.post('/register', registerAdmin); // Remove or protect in production
 router.get('/me', protect, getCurrentAdmin);
 router.post('/request-code', protect, requestVerificationCode);
 router.post('/change-password', protect, resetPasswordWithCode);
+router.post('/forgot-password', forgotPasswordRequest);
+router.post('/reset-password', forgotPasswordReset);
 
 export default router;
 

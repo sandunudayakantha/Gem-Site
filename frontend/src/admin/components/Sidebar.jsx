@@ -25,7 +25,7 @@ const Sidebar = () => {
         <div className="flex items-center gap-3">
           <img src={logo} alt="A S Gems Logo" className="h-14 w-auto" />
           <span className="text-xl font-light tracking-widest uppercase text-gold-gradient">
-            Collection
+            AS COLLECTION
           </span>
         </div>
         <p className="text-xs text-gray-400 mt-1 uppercase tracking-tighter">Admin Panel</p>

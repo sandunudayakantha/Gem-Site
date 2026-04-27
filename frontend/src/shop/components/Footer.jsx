@@ -46,14 +46,14 @@ const Footer = () => {
       <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16 md:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 md:gap-16">
           {/* Brand Section */}
-          <div>
-            <Link to="/" className="flex items-center gap-4 mb-8">
+          <div className="flex flex-col items-center">
+            <Link to="/" className="flex flex-col items-center gap-4 mb-8">
               <img src={logo} alt="A S Gems Logo" className="h-12 w-auto" />
-              <span className="text-xl font-light tracking-[0.2em] uppercase text-gold-gradient">
-                Collection
+              <span className="text-xl font-light tracking-widest uppercase text-gold-gradient text-center">
+                AS COLLECTION
               </span>
             </Link>
-            <p className="text-sm text-white/70 font-light tracking-wide leading-relaxed mb-6">
+            <p className="text-sm text-white/70 font-light tracking-wide leading-relaxed mb-6 text-center">
               Discover timeless elegance and contemporary style. Curated collections for the modern wardrobe.
             </p>
             {settings?.contact && (

@@ -165,3 +165,75 @@ export const resetPasswordWithCode = async (req, res) => {
     res.status(500).json({ message: 'Failed to update password' });
   }
 };
+
+// Forgot Password Request
+export const forgotPasswordRequest = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Please provide an email' });
+    }
+
+    const admin = await AdminUser.findOne({ where: { email } });
+    
+    if (!admin) {
+      // For security, don't reveal if admin exists, but in admin panel context, 
+      // we can return a consistent success message.
+      return res.json({ message: 'If an account exists with that email, a verification code has been sent.' });
+    }
+
+    // Generate 6-digit code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiration = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    admin.verificationCode = verificationCode;
+    admin.verificationCodeExpires = expiration;
+    await admin.save();
+
+    // Send email
+    await sendVerificationEmail(admin.email, verificationCode);
+
+    res.json({ message: 'Verification code sent to email' });
+  } catch (error) {
+    console.error('Error in forgotPasswordRequest:', error);
+    res.status(500).json({ message: 'Failed to send verification code' });
+  }
+};
+
+// Forgot Password Reset
+export const forgotPasswordReset = async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ message: 'Please provide email, code and new password' });
+    }
+
+    const admin = await AdminUser.findOne({ where: { email } });
+
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    // Verify code and check expiration
+    if (admin.verificationCode !== code) {
+      return res.status(400).json({ message: 'Invalid verification code' });
+    }
+
+    if (new Date() > admin.verificationCodeExpires) {
+      return res.status(400).json({ message: 'Verification code has expired' });
+    }
+
+    // Update password
+    admin.password = newPassword;
+    admin.verificationCode = null;
+    admin.verificationCodeExpires = null;
+    await admin.save();
+
+    res.json({ message: 'Password reset successfully' });
+  } catch (error) {
+    console.error('Error in forgotPasswordReset:', error);
+    res.status(500).json({ message: 'Failed to reset password' });
+  }
+};
